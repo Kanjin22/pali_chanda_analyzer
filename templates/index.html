@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องมือวิเคราะห์ฉันทลักษณ์บาลี</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8f9fa; }
+        .hero { background: linear-gradient(135deg, #4a00e0, #8e2de2); color: white; padding: 3rem 1.5rem; text-align: center; }
+        .hero h1 { font-weight: 700; }
+        .section-title { text-align: center; margin-top: 3rem; margin-bottom: 2rem; font-weight: 700; color: #343a40; }
+        .gana-card { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+        .gana-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .gana-name { font-size: 1.5rem; font-weight: 500; color: #4a00e0; }
+        .gana-example { font-size: 1.1rem; color: #495057; }
+        .gana-pattern { font-family: 'Courier New', Courier, monospace; font-size: 2rem; font-weight: bold; color: #333; margin-top: 0.5rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; margin-bottom: 0.5rem; display: flex; justify-content: center; align-items: center; }
+        .gana-pattern span:not(:last-child)::after { content: '|'; font-weight: 100; color: #d0d0d0; margin: 0 0.75rem; }
+        .syllable-desc-container { display: flex; justify-content: space-around; width: 100%; }
+        .syllable-desc { font-size: 0.85rem; color: #6c757d; flex: 1; }
+        .action-box { background-color: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); margin-top: 2rem; }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <h1 class="display-5">เครื่องมือวิเคราะห์ฉันทลักษณ์บาลี</h1>
+        <p class="lead">เรียนรู้และตรวจสอบความถูกต้องของฉันท์ในภาษาบาลี</p>
+    </header>
+    <main class="container">
+        <section>
+            <h2 class="section-title">คณะฉันท์ทั้ง ๘</h2>
+            <p class="text-center text-muted mb-4">การเรียกชื่อคณะฉันท์ทั้ง ๘ ตามพระนามของพระพุทธเจ้า เพื่อให้ง่ายต่อการจดจำ</p>
+            <div class="row g-4">
+                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ม-คณะ</div><div class="gana-example">สพฺพญฺญู</div></div><div><div class="gana-pattern"><span>–</span><span>–</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div></div></div></div></div>
+                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">น-คณะ</div><div class="gana-example">สุมุนิ</div></div><div><div class="gana-pattern"><span>U</span><span>U</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div></div></div></div></div>
+                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ส-คณะ</div><div class="gana-example">สุคโต</div></div><div><div class="gana-pattern"><span>U</span><span>U</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div></div></div></div></div>
+                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ช-คณะ</div><div class="gana-example">มุนินฺท</div></div><div><div class="gana-pattern"><span>U</span><span>–</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div></div></div></div></div>
+                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ต-คณะ</div><div class="gana-example">มาราชิ</div></div><div><div class="gana-pattern"><span>–</span><span>–</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div></div></div></div></div>
+                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ภ-คณะ</div><div class="gana-example">มารชิ</div></div><div><div class="gana-pattern"><span>–</span><span>U</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div></div></div></div></div>
+                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ร-คณะ</div><div class="gana-example">นายโก</div></div><div><div class="gana-pattern"><span>–</span><span>U</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div></div></div></div></div>
+                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ย-คณะ</div><div class="gana-example">มเหสี</div></div><div><div class="gana-pattern"><span>U</span><span>–</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div></div></div></div></div>
+            </div>
+        </section>
+        <section class="mt-5 mb-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8"><div class="action-box text-center"><h3 class="mb-3" style="font-weight: 500;">เลือกฉันท์เพื่อเริ่มการวิเคราะห์</h3><form id="chanda-form"><div class="input-group input-group-lg"><select class="form-select" id="chanda-select"><option selected disabled>--- กรุณาเลือกประเภทฉันท์ ---</option>
+                {% for id, chanda in chandas.items() %}
+                    <option value="{{ id }}">{{ chanda.name.replace('8','๘').replace('11','๑๑').replace('12','๑๒').replace('14','๑๔') }}</option>
+                {% endfor %}
+                </select><button class="btn btn-primary" type="submit" style="font-weight: 500;">ตรวจสอบ</button></div></form></div></div>
+            </div>
+        </section>
+    </main>
+    <footer class="text-center text-muted p-4"><p>&copy; ๒๕๖๗ - พัฒนาเพื่อการศึกษาฉันทลักษณ์บาลี</p></footer>
+    <script>
+        document.getElementById('chanda-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const selectedChandaId = document.getElementById('chanda-select').value;
+            if (selectedChandaId && selectedChandaId !== '--- กรุณาเลือกประเภทฉันท์ ---') {
+                window.location.href = `/analyzer/${selectedChandaId}`;
+            } else { alert('กรุณาเลือกฉันท์ที่ต้องการตรวจสอบก่อนครับ'); }
+        });
+    </script>
+</body>
+</html>

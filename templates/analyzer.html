@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>วิเคราะห์ {{ chanda.name.replace('8','๘').replace('11','๑๑').replace('12','๑๒').replace('14','๑๔') }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding-top: 2rem; font-family: 'Sarabun', sans-serif; }
+        .container { max-width: 1140px; }
+        .card { box-shadow: 0 6px 12px rgba(0,0,0,0.1); border: none; }
+        .verse-input-group { display: flex; align-items: center; margin-bottom: 0.75rem; }
+        .verse-input-group label { width: 140px; font-weight: 500; white-space: nowrap; }
+        #analysis-container { margin-top: 2rem; overflow-x: auto; }
+        .analysis-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; text-align: center; }
+        .analysis-table th, .analysis-table td { padding: 0.5rem; border: 1px solid #dee2e6; vertical-align: middle; min-width: 50px; }
+        .analysis-table th:first-child, .analysis-table td:first-child { text-align: left; font-weight: 700; background-color: #f8f9fa; width: 180px; }
+        .analysis-table .header-row th { background-color: #e9ecef; }
+        .syllable-symbol { font-family: 'Courier New', Courier, monospace; font-size: 1.2rem; font-weight: bold; }
+        .syllable-text { font-size: 1.2rem; font-weight: 700; }
+        .required-pattern-row td { background-color: #f0f9ff; color: #5a7a94; }
+        .required-pattern-row .forbidden { color: #dc3545; font-weight: bold; text-decoration: line-through; }
+        .mismatch { background-color: #fff3cd !important; color: #664d03 !important; position: relative; outline: 2px solid #ffc107; outline-offset: -2px; }
+        .mismatch::before { content: 'ผิด!'; position: absolute; top: 1px; left: 3px; font-size: 0.65rem; color: #dc3545; font-weight: bold; }
+        .edit-mode-input, .edit-mode-select { width: 100%; border: 1px solid #0d6efd; border-radius: 4px; text-align: center; font-family: inherit; }
+        .edit-mode-input { font-size: 1.1rem; font-weight: 700; }
+        .edit-mode-select { font-size: 1rem; }
+        .analysis-actions { margin-top: 1rem; padding: 1rem; background-color: #e9ecef; border-radius: 8px; text-align: center; border: 1px solid #dee2e6;}
+        .explanation-box { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem 2rem; }
+        .explanation-box ul { padding-left: 1.5rem; }
+        .explanation-box li { margin-bottom: 0.5rem; }
+        .explanation-box .sub-list { margin-top: 0.5rem; margin-left: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-4"><a href="{{ url_for('index') }}" class="btn btn-outline-secondary">&larr; กลับไปเลือกฉันท์</a></div>
+        <div class="card"><div class="card-body p-4">
+            <div class="p-3 mb-4 rounded bg-light border"><h2 class="h4 text-center">{{ chanda.name.replace('8','๘').replace('11','๑๑').replace('12','๑๒').replace('14','๑๔') }}</h2></div>
+            <div id="pali-input-verses">
+                <div class="verse-input-group"><label for="verse-1">บาทที่ ๑:</label><input type="text" id="verse-1" class="form-control" placeholder="ป้อนคาถาบาทที่ ๑"></div>
+                <div class="verse-input-group"><label for="verse-2">บาทที่ ๒:</label><input type="text" id="verse-2" class="form-control" placeholder="ป้อนคาถาบาทที่ ๒"></div>
+                <div class="verse-input-group"><label for="verse-3">บาทที่ ๓:</label><input type="text" id="verse-3" class="form-control" placeholder="ป้อนคาถาบาทที่ ๓"></div>
+                <div class="verse-input-group"><label for="verse-4">บาทที่ ๔:</label><input type="text" id="verse-4" class="form-control" placeholder="ป้อนคาถาบาทที่ ๔"></div>
+            </div>
+            <div class="d-grid mt-4"><button id="analyze-btn" class="btn btn-primary btn-lg">วิเคราะห์</button></div>
+        </div></div>
+        <div id="analysis-container"></div>
+        
+        <div id="analysis-actions-container" class="d-none">
+            <!-- เพิ่ม class 'alert alert-info' และ 'text-center' -->
+             <div class="analysis-actions alert alert-info text-center">
+                <!-- เปลี่ยน class จาก 'text-muted' เป็น 'alert-heading' และเพิ่ม h5 เพื่อให้เด่นขึ้น -->
+                 <h5 class="alert-heading">คำแนะนำ</h5>
+                 <p class="mb-2" style="font-size: 0.95rem;">
+                    เนื่องจากการแบ่งพยางค์ที่มีความซับซ้อน โปรแกรมอาจวิเคราะห์ผิดพลาดได้<br>
+                    หากพบข้อผิดพลาด ท่านสามารถกดปุ่มด้านล่างเพื่อแก้ไขผลลัพธ์ให้ถูกต้องได้ด้วยตนเอง
+                </p>
+                <hr>
+                <button id="edit-mode-btn" class="btn btn-primary">แก้ไขผลการวิเคราะห์</button>
+                <button id="re-analyze-btn" class="btn btn-success d-none">ปรับปรุงผลลัพธ์ตามที่แก้ไข</button>
+            </div>
+        </div>
+        
+        <div class="explanation-box mt-4">
+            {% if chanda_id == 'pathyavatta' %}
+                <h4 class="mb-3">คำอธิบายลักษณะบังคับของ "ปัฐยาวัตรฉันท์ ๘"</h4>
+                <p>เป็นฉันท์ที่มีรูปแบบไม่ตายตัว แต่มีข้อกำหนดเฉพาะในแต่ละบาท ดังนี้</p>
+                <ul><li><strong>บาทคี่ (บาทที่ ๑, ๓):</strong> พยางค์ที่ ๕-๖-๗ ต้องเป็น <strong>ย-คณะ (U – –)</strong></li><li><strong>บาทคู่ (บาทที่ ๒, ๔):</strong> พยางค์ที่ ๕-๖-๗ ต้องเป็น <strong>ช-คณะ (U – U)</strong></li><li><strong>ข้อห้ามร่วมกัน:</strong> พยางค์ที่ ๒ และ ๓ ของทุกบาท ห้ามเป็นลหุคู่กัน</li></ul>
+                <a href="https://www.pariyat.com/component/zoo/item/%E0%B8%9B%E0%B8%B1%E0%B8%90%E0%B8%A2%E0%B8%B2%E0%B8%A7%E0%B8%B1%E0%B8%95%E0%B8%A3%E0%B8%89%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B9%8C" target="_blank">อ่านรายละเอียดเพิ่มเติม...</a>
+            {% elif chanda_id == 'indavajira' %}
+                <h4 class="mb-3">คำอธิบายลักษณะบังคับของ "อินทรวิเชียรฉันท์ ๑๑"</h4>
+                <ul><li>๑ คาถา มี ๔ บาท, แต่ละบาทมี <strong>๑๑ พยางค์</strong></li><li><strong>คณะบังคับ:</strong> ประกอบด้วย <strong>ต, ต, ช, ค, ค</strong> (ต-คณะ ๒, ช-คณะ ๑, ครุ ๒)</li><li><strong>รูปแบบครุ-ลหุ:</strong> <code>– – U | – – U | U – U | – –</code></li></ul>
+                <a href="https://www.pariyat.com/component/zoo/item/%E0%B8%AD%E0%B8%B4%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%A7%E0%B8%B4%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%A3%E0%B8%89%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B9%8C" target="_blank">อ่านรายละเอียดเพิ่มเติม...</a>
+            {% elif chanda_id == 'upendavajira' %}
+                <h4 class="mb-3">คำอธิบายลักษณะบังคับของ "อุเปนทรวิเชียรฉันท์ ๑๑"</h4>
+                <ul><li>๑ คาถา มี ๔ บาท, แต่ละบาทมี <strong>๑๑ พยางค์</strong> (เหมือนอินทรวิเชียร แต่พยางค์แรกเป็นลหุ)</li><li><strong>คณะบังคับ:</strong> ประกอบด้วย <strong>ช, ต, ช, ค, ค</strong> (ช-คณะ ๑, ต-คณะ ๑, ช-คณะ ๑, ครุ ๒)</li><li><strong>รูปแบบครุ-ลหุ:</strong> <code>U – U | – – U | U – U | – –</code></li></ul>
+                <a href="https://www.pariyat.com/component/zoo/item/%E0%B8%AD%E0%B8%B8%E0%B9%80%E0%B8%9B%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%A7%E0%B8%B4%E0%B9%80%E0%B8%8A%E0%B8%B5%E0%B8%A2%E0%B8%A3%E0%B8%89%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B9%8C" target="_blank">อ่านรายละเอียดเพิ่มเติม...</a>
+            {% elif chanda_id == 'indavamsa' %}
+                <h4 class="mb-3">คำอธิบายลักษณะบังคับของ "อินทรวงศ์ฉันท์ ๑๒"</h4>
+                <ul><li>๑ คาถา มี ๔ บาท, แต่ละบาทมี <strong>๑๒ พยางค์</strong></li><li><strong>คณะบังคับ:</strong> ประกอบด้วย <strong>ต, ต, ช, ร</strong> (ต-คณะ ๒, ช-คณะ ๑, ร-คณะ ๑)</li><li><strong>รูปแบบครุ-ลหุ:</strong> <code>– – U | – – U | U – U | – U –</code></li></ul>
+                 <a href="https://www.pariyat.com/component/zoo/item/%E0%B8%AD%E0%B8%B4%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%A7%E0%B8%87%E0%B8%A8%E0%B9%8C%E0%B8%89%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B9%8C" target="_blank">อ่านรายละเอียดเพิ่มเติม...</a>
+            {% elif chanda_id == 'vamsattha' %}
+                <h4 class="mb-3">คำอธิบายลักษณะบังคับของ "วังสัฏฐฉันท์ ๑๒"</h4>
+                <ul><li>๑ คาถา มี ๔ บาท, แต่ละบาทมี <strong>๑๒ พยางค์</strong></li><li><strong>คณะบังคับ:</strong> ประกอบด้วย <strong>ช, ต, ช, ร</strong> (ช-คณะ ๑, ต-คณะ ๑, ช-คณะ ๑, ร-คณะ ๑)</li><li><strong>รูปแบบครุ-ลหุ:</strong> <code>U – U | – – U | U – U | – U –</code></li></ul>
+                <a href="https://www.pariyat.com/component/zoo/item/%E0%B8%A7%E0%B8%B1%E0%B8%87%E0%B8%AA%E0%B8%B1%E0%B8%8F%E0%B8%90%E0%B8%89%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B9%8C" target="_blank">อ่านรายละเอียดเพิ่มเติม...</a>
+            {% elif chanda_id == 'vasantatilaka' %}
+                 <h4 class="mb-3">คำอธิบายลักษณะบังคับของ "วสันตดิลกฉันท์ ๑๔"</h4>
+                <ul><li>๑ คาถา มี ๔ บาท, แต่ละบาทมี <strong>๑๔ พยางค์</strong></li><li><strong>คณะบังคับ:</strong> ประกอบด้วย <strong>ต, ภ, ช, ช, ค, ค</strong> (ต-คณะ ๑, ภ-คณะ ๑, ช-คณะ ๒, ครุ ๒)</li><li><strong>รูปแบบครุ-ลหุ:</strong> <code>– – U | – U U | U – U | U – U | – –</code></li></ul>
+                <a href="https://www.pariyat.com/component/zoo/item/%E0%B8%A7%E0%B8%AA%E0%B8%B1%E0%B8%99%E0%B8%95%E0%B8%94%E0%B8%B4%E0%B8%A5%E0%B8%81%E0%B8%89%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B9%8C" target="_blank">อ่านรายละเอียดเพิ่มเติม...</a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const analysisContainer = document.getElementById('analysis-container');
+        const chandaId = "{{ chanda_id }}";
+        const chandaPattern = "{{ chanda.pattern }}";
+        const thai_numerals = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
+        function toThaiNumeral(n) { return String(n).split('').map(digit => thai_numerals[parseInt(digit, 10)]).join(''); }
+        
+        const actionsContainer = document.getElementById('analysis-actions-container');
+        const editModeBtn = document.getElementById('edit-mode-btn');
+        const reAnalyzeBtn = document.getElementById('re-analyze-btn');
+
+        analyzeBtn.addEventListener('click', () => {
+            const verseInputs = getVerseInputs();
+            runInitialAnalysis(verseInputs);
+        });
+
+        editModeBtn.addEventListener('click', () => toggleEditMode(true));
+
+        reAnalyzeBtn.addEventListener('click', () => {
+            const updatedVerseData = collectDataFromTable();
+            toggleEditMode(false);
+            renderResults(updatedVerseData);
+        });
+
+        async function runInitialAnalysis(verses) {
+            if (!verses.some(v => v.trim())) { showMessage('กรุณาป้อนข้อความอย่างน้อย ๑ บาท'); return; }
+            showLoading();
+            try {
+                const response = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ verses: verses }) });
+                if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+                const resultsByVerse = await response.json();
+                renderResults(resultsByVerse);
+            } catch (error) { showError(error); }
+        }
+        
+        function renderResults(versesData) {
+            if (chandaId === 'pathyavatta') {
+                displayPathyavattaTable(versesData);
+            } else if (chandaPattern) {
+                const syllableCount = chandaPattern.length;
+                displayGenericTable(versesData, syllableCount, chandaPattern);
+            } else {
+                showError({ message: 'การแสดงผลสำหรับฉันท์นี้ยังไม่พร้อมใช้งาน' });
+            }
+            if (versesData.some(v => v.length > 0)) {
+                actionsContainer.classList.remove('d-none');
+            }
+        }
+
+        function toggleEditMode(enable) {
+            const tableBody = document.querySelector('.analysis-table tbody');
+            if (!tableBody) return;
+            tableBody.querySelectorAll('tr').forEach((row) => {
+                const rowType = row.dataset.rowType;
+                if (enable) {
+                    if (rowType === 'syllable-text-row') {
+                        row.querySelectorAll('td[data-col]').forEach(cell => {
+                            if(cell.textContent !== '-') cell.innerHTML = `<input type="text" class="edit-mode-input" value="${cell.textContent}">`;
+                        });
+                    } else if (rowType === 'result-symbol-row') {
+                        row.querySelectorAll('td[data-col]').forEach(cell => {
+                            if(cell.textContent !== '-') {
+                                const isLahu = cell.textContent === 'U';
+                                cell.innerHTML = `<select class="edit-mode-select"><option value="lahu" ${isLahu ? 'selected' : ''}>U (ลหุ)</option><option value="garu" ${!isLahu ? 'selected' : ''}>– (ครุ)</option></select>`;
+                            }
+                        });
+                    }
+                }
+            });
+            editModeBtn.classList.toggle('d-none', enable);
+            reAnalyzeBtn.classList.toggle('d-none', !enable);
+        }
+
+        function collectDataFromTable() {
+            const newVerseData = [];
+            const rows = document.querySelectorAll('.analysis-table tbody tr[data-row-type="syllable-text-row"]');
+            rows.forEach((syllableRow) => {
+                const symbolRow = syllableRow.nextElementSibling;
+                const verseSyllables = [];
+                const syllableInputs = syllableRow.querySelectorAll('input.edit-mode-input');
+                const typeSelects = symbolRow.querySelectorAll('select.edit-mode-select');
+                for (let i = 0; i < syllableInputs.length; i++) {
+                    const syllableText = syllableInputs[i].value;
+                    const syllableType = typeSelects[i].value;
+                    if (syllableText && syllableText.trim() !== '' && syllableText !== '-') {
+                        verseSyllables.push({ syllable: syllableText, type: syllableType });
+                    }
+                }
+                newVerseData.push(verseSyllables);
+            });
+            return newVerseData;
+        }
+        
+        function displayGenericTable(versesData, syllableCount, requiredPattern) {
+            let headerHTML = `<tr><th>รายละเอียด</th>`;
+            for(let i = 1; i <= syllableCount; i++) { headerHTML += `<th>${toThaiNumeral(i)}</th>`; }
+            headerHTML += '</tr>';
+            let tableHTML = `<table class="analysis-table mt-4"><thead class="header-row">${headerHTML}</thead><tbody>`;
+            versesData.forEach((verseSyllables, index) => {
+                if (verseSyllables.length === 0) return;
+                let requiredRow = `<tr class="required-pattern-row"><td>บังคับ ครุ-ลหุ</td>`;
+                let resultRow = `<tr data-row-type="result-symbol-row"><td>ผลการวิเคราะห์</td>`;
+                let syllableRow = `<tr class="table-group-divider" data-row-type="syllable-text-row"><td class="fw-bold">บาทที่ ${toThaiNumeral(index + 1)}</td>`;
+                for (let i = 0; i < syllableCount; i++) {
+                    const reqSymbolText = requiredPattern[i] === '-' ? '–' : 'U';
+                    requiredRow += `<td>${reqSymbolText}</td>`;
+                    if (i < verseSyllables.length) {
+                        let resultType = verseSyllables[i].type;
+                        if (i === (syllableCount - 1) && resultType === 'lahu') { resultType = 'garu'; }
+                        const resultSymbol = (resultType === 'lahu') ? 'U' : '–';
+                        const mismatchClass = (reqSymbolText !== '.' && reqSymbolText !== resultSymbol) ? 'mismatch' : '';
+                        resultRow += `<td class="syllable-symbol ${mismatchClass}" data-col="${i}">${resultSymbol}</td>`;
+                        syllableRow += `<td class="syllable-text ${mismatchClass}" data-col="${i}">${verseSyllables[i].syllable}</td>`;
+                    } else {
+                        resultRow += `<td data-col="${i}">-</td>`;
+                        syllableRow += `<td data-col="${i}">-</td>`;
+                    }
+                }
+                requiredRow += '</tr>'; resultRow += '</tr>'; syllableRow += '</tr>';
+                tableHTML += syllableRow + resultRow + requiredRow;
+            });
+            tableHTML += `</tbody></table>`;
+            analysisContainer.innerHTML = tableHTML;
+        }
+
+        function displayPathyavattaTable(versesData) {
+            let tableHTML = `<table class="analysis-table mt-4"><thead class="header-row"><tr><th>รายละเอียด</th><th>๑</th><th>๒</th><th>๓</th><th>๔</th><th>๕</th><th>๖</th><th>๗</th><th>๘</th></tr></thead><tbody>`;
+            versesData.forEach((verseSyllables, index) => {
+                if (verseSyllables.length === 0) return;
+                const isOddVerse = (index % 2 === 0);
+                const verseNumber = toThaiNumeral(index + 1);
+                const verseType = isOddVerse ? "ขอน" : "คู่";
+                let requiredRow = `<tr class="required-pattern-row"><td>บังคับ ครุ-ลหุ</td>`;
+                let resultRow = `<tr data-row-type="result-symbol-row"><td>ผลการวิเคราะห์</td>`;
+                let syllableRow = `<tr class="table-group-divider" data-row-type="syllable-text-row"><td class="fw-bold">บาทที่ ${verseNumber} (${verseType})</td>`;
+                const isLahuPairViolation = (verseSyllables.length > 2 && verseSyllables[1].type === 'lahu' && verseSyllables[2].type === 'lahu');
+                for (let i = 0; i < 8; i++) {
+                    const reqSymbolHTML = getRequiredSymbol(i, isOddVerse, isLahuPairViolation);
+                    requiredRow += `<td>${reqSymbolHTML}</td>`;
+                    if (i < verseSyllables.length) {
+                        const syl = verseSyllables[i];
+                        let resultType = syl.type;
+                        if (i === 7 && resultType === 'lahu') { resultType = 'garu'; }
+                        const resultSymbol = (resultType === 'lahu') ? 'U' : '–';
+                        const reqSymbolText = reqSymbolHTML.replace(/<[^>]*>/g, '');
+                        let mismatchClass = '';
+                        if (reqSymbolText !== '' && reqSymbolText !== resultSymbol) { mismatchClass = 'mismatch'; }
+                        if (isLahuPairViolation && (i === 1 || i === 2)) { mismatchClass = 'mismatch'; }
+                        resultRow += `<td class="syllable-symbol ${mismatchClass}" data-col="${i}">${resultSymbol}</td>`;
+                        syllableRow += `<td class="syllable-text ${mismatchClass}" data-col="${i}">${verseSyllables[i].syllable}</td>`;
+                    } else {
+                        resultRow += `<td data-col="${i}">-</td>`;
+                        syllableRow += `<td data-col="${i}">-</td>`;
+                    }
+                }
+                requiredRow += '</tr>'; resultRow += '</tr>'; syllableRow += '</tr>';
+                tableHTML += syllableRow + resultRow + requiredRow;
+            });
+            tableHTML += `</tbody></table>`;
+            analysisContainer.innerHTML = tableHTML;
+        }
+        
+        function getVerseInputs() { return [document.getElementById('verse-1').value, document.getElementById('verse-2').value, document.getElementById('verse-3').value, document.getElementById('verse-4').value]; }
+        function getRequiredSymbol(position, isOddVerse, isLahuPairViolation) {
+            if(position >= 4 && position <= 6) { const pattern = isOddVerse ? ['U', '–', '–'] : ['U', '–', 'U']; return pattern[position - 4]; }
+            if (isLahuPairViolation && (position === 1 || position === 2)) { return `<span class="forbidden" title="ห้ามเป็นลหุคู่กัน">U</span>`; }
+            return '';
+        }
+        function showLoading() { analysisContainer.innerHTML = '<div class="d-flex justify-content-center mt-4"><div class="spinner-border text-primary" role="status"></div></div>'; actionsContainer.classList.add('d-none'); }
+        function showError(error) { analysisContainer.innerHTML = `<p class="text-danger text-center mt-4">เกิดข้อผิดพลาด: ${error.message}</p>`; }
+        function showMessage(message) { analysisContainer.innerHTML = `<p class="text-center text-muted">${message}</p>`; }
+    </script>
+</body>
+</html>
