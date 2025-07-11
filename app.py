@@ -1,9 +1,8 @@
 # app.py
 
+import os
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from extensions import db, migrate
-
-app = Flask(__name__)
 
 # ======================================================================
 #  ส่วนสร้าง Flask App และตั้งค่า
@@ -11,9 +10,29 @@ app = Flask(__name__)
 def create_app():
     app = Flask(__name__)
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+    # --- START: ส่วนที่แก้ไขเพื่อรองรับการ Deployment ---
+    # ตั้งค่าฐานข้อมูล: ใช้ DATABASE_URL จาก Environment Variable ถ้ามี,
+    # ถ้าไม่มี (ตอนรันบนเครื่องตัวเอง) ให้ใช้ sqlite:///site.db เป็นค่าเริ่มต้น
+    database_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
+
+    # สำหรับ Render Disk ที่เราจะใช้กับ SQLite หรือการรันบนเครื่อง
+    # เราจะปรับ path ให้เก็บไฟล์ db ไว้ในโฟลเดอร์ instance
+    if database_url.startswith('sqlite:///'):
+        # สร้างโฟลเดอร์ instance ถ้ายังไม่มีอยู่
+        # os.path.dirname(os.path.abspath(__file__)) คือ path ของไดเรกทอรีที่ไฟล์ app.py อยู่
+        instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+        os.makedirs(instance_path, exist_ok=True)
+        # สร้าง path เต็มไปยังไฟล์ database ในโฟลเดอร์ instance
+        db_name = database_url.split('///')[1] # ดึงชื่อไฟล์ db ออกมา (เช่น site.db)
+        database_url = f"sqlite:///{os.path.join(instance_path, db_name)}"
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = 'your_super_secret_key_here' 
+
+    # ตั้งค่า Secret Key จาก Environment Variable เพื่อความปลอดภัย
+    # หากไม่พบค่าใน Environment Variable จะใช้ค่า default (เหมาะสำหรับตอนพัฒนา)
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a_very_secret_key_for_development')
+    # --- END: ส่วนที่แก้ไข ---
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -46,24 +65,21 @@ def create_app():
     @app.route('/api/analyze', methods=['POST'])
     def analyze_api():
         data = request.get_json()
-        # data['verses'] จะเป็น list ของ string (ข้อความดิบ)
-        # หรือ list ของ list ของ string (พยางค์ที่แบ่งแล้วจาก Frontend)
         if not data or 'verses' not in data or not isinstance(data['verses'], list):
             return jsonify({'error': 'Invalid input, expected a list of verses.'}), 400
-        
+
         results_by_verse = []
-        # ตรวจสอบว่า input เป็นข้อความดิบ หรือพยางค์ที่แบ่งแล้ว
-        if all(isinstance(v, str) for v in data['verses']): # ถ้าเป็นข้อความดิบ (จากปุ่ม "แบ่งพยางค์" ครั้งแรก)
+        if all(isinstance(v, str) for v in data['verses']):
             for verse_text in data['verses']:
-                syllables = syllabify_and_analyze(verse_text) # ทำการแบ่งและวิเคราะห์ ครุ-ลหุ
+                syllables = syllabify_and_analyze(verse_text)
                 results_by_verse.append(syllables)
-        elif all(isinstance(v, list) and all(isinstance(s, str) for s in v) for v in data['verses']): # ถ้าเป็นพยางค์ที่แบ่งแล้ว (จากปุ่ม "ยืนยันและวิเคราะห์")
+        elif all(isinstance(v, list) and all(isinstance(s, str) for s in v) for v in data['verses']):
             for verse_syllables_list in data['verses']:
-                analyzed_syllables = analyze_prosody(verse_syllables_list) # แค่วิเคราะห์ ครุ-ลหุ ใหม่
+                analyzed_syllables = analyze_prosody(verse_syllables_list)
                 results_by_verse.append(analyzed_syllables)
         else:
             return jsonify({'error': 'Invalid input format.'}), 400
-            
+
         return jsonify(results_by_verse)
 
     @app.route('/api/identify_chanda', methods=['POST'])
@@ -71,37 +87,24 @@ def create_app():
         data = request.get_json()
         if not data or 'verses' not in data or not isinstance(data['verses'], list):
             return jsonify({'error': 'Invalid input, expected a list of verses.'}), 400
-        
-        # ========== START: ส่วนที่แก้ไข ==========
-        # ในขั้นตอนนี้ 'verses' ที่ส่งมาจาก frontend คือรายการพยางค์ที่ผู้ใช้แก้ไขแล้ว
-        # (เช่น [['สุ', 'ขา'], ['สงฺ', 'ฆสฺ', 'ส']])
-        # เราจึงไม่ใช้ syllabify_and_analyze แต่จะใช้ analyze_prosody เพื่อวิเคราะห์ครุ-ลหุจากพยางค์ที่ได้รับมาโดยตรง
-        
-        prosody_results_by_verse = []
-        # ตรวจสอบให้แน่ใจว่าเป็น list of lists of strings
+
         if not all(isinstance(v, list) and all(isinstance(s, str) for s in v) for v in data['verses']):
              return jsonify({'error': 'Invalid input format. Expected a list of lists of syllables.'}), 400
 
+        prosody_results_by_verse = []
         for verse_syllables_list in data['verses']:
-            # วิเคราะห์ครุ-ลหุจากพยางค์ที่ถูกแก้ไขแล้ว
-            analyzed_syllables = analyze_prosody(verse_syllables_list) 
+            analyzed_syllables = analyze_prosody(verse_syllables_list)
             prosody_results_by_verse.append(analyzed_syllables)
-        
-        # ========== END: ส่วนที่แก้ไข ==========
 
-        # ส่งผลการวิเคราะห์ครุ-ลหุ (จากพยางค์ที่แก้ไขแล้ว) ไปยังฟังก์ชันระบุฉันท์
         identification_results = identify_chanda_logic(prosody_results_by_verse, db, Chanda)
-        
-        # ส่งผลลัพธ์ทั้งหมดกลับไปให้ frontend
-        # "identification" คือผลการระบุฉันท์
-        # "prosody_results" คือผลการวิเคราะห์ครุ-ลหุจากพยางค์ที่ผู้ใช้แก้ไขล่าสุด เพื่อให้ตารางแสดงผลถูกต้อง
+
         return jsonify({
             "identification": identification_results,
             "prosody_results": prosody_results_by_verse
         })
 
     # ======================================================================
-    #  Admin Panel Routes (ไม่มีการแก้ไข)
+    #  Admin Panel Routes
     # ======================================================================
     @app.route('/admin')
     def admin_home():
@@ -118,17 +121,17 @@ def create_app():
             chanda_type = request.form['chanda_type']
             description_short = request.form['description_short']
             pariyat_url = request.form['pariyat_url']
-            
+
             existing_chanda = Chanda.query.filter_by(chanda_id=chanda_id).first()
             if existing_chanda:
                 flash(f"ข้อผิดพลาด: Chanda ID '{chanda_id}' นี้มีอยู่แล้ว กรุณาใช้ ID อื่น หรือไปแก้ไขข้อมูลเดิม", 'danger')
-                return render_template('admin/add.html', 
-                                       chanda_id=chanda_id, name=name, pattern=pattern, 
-                                       syllable_count=syllable_count, chanda_type=chanda_type, 
+                return render_template('admin/add.html',
+                                       chanda_id=chanda_id, name=name, pattern=pattern,
+                                       syllable_count=syllable_count, chanda_type=chanda_type,
                                        description_short=description_short, pariyat_url=pariyat_url)
-                
-            new_chanda = Chanda(chanda_id=chanda_id, name=name, pattern=pattern, 
-                                syllable_count=syllable_count, chanda_type=chanda_type, 
+
+            new_chanda = Chanda(chanda_id=chanda_id, name=name, pattern=pattern,
+                                syllable_count=syllable_count, chanda_type=chanda_type,
                                 description_short=description_short, pariyat_url=pariyat_url)
             db.session.add(new_chanda)
             db.session.commit()
@@ -150,7 +153,7 @@ def create_app():
             flash(f"แก้ไขฉันท์ '{chanda_to_edit.name}' สำเร็จแล้ว!", 'success')
             return redirect(url_for('admin_home'))
         return render_template('admin/edit.html', chanda=chanda_to_edit)
-    
+
     @app.route('/admin/delete/<string:chanda_id>', methods=['POST'])
     def admin_delete_chanda(chanda_id):
         chanda_to_delete = Chanda.query.filter_by(chanda_id=chanda_id).first_or_404()
@@ -158,5 +161,10 @@ def create_app():
         db.session.commit()
         flash(f"ลบฉันท์ '{chanda_to_delete.name}' สำเร็จแล้ว!", 'success')
         return redirect(url_for('admin_home'))
-    
+
     return app
+
+# เพิ่มส่วนนี้เพื่อให้สามารถรันไฟล์ app.py โดยตรงได้ (สำหรับการทดสอบบนเครื่อง)
+if __name__ == '__main__':
+    app = create_app()
+    app.run(debug=True)
