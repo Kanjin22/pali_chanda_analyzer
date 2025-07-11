@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบุฉันท์อัตโนมัติ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; padding-top: 2rem; font-family: 'Sarabun', sans-serif; }
+        .container { max-width: 1140px; }
+        .card { box-shadow: 0 6px 12px rgba(0,0,0,0.1); border: none; }
+        .verse-input-group { display: flex; align-items: center; margin-bottom: 0.75rem; }
+        .verse-input-group label { width: 140px; font-weight: 500; white-space: nowrap; }
+        #analysis-container { margin-top: 2rem; overflow-x: auto; }
+        .analysis-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; text-align: center; }
+        .analysis-table th, .analysis-table td { padding: 0.5rem; border: 1px solid #dee2e6; vertical-align: middle; min-width: 50px; }
+        .analysis-table th:first-child, .analysis-table td:first-child { text-align: left; font-weight: 700; background-color: #f8f9fa; width: 180px; }
+        .analysis-table .header-row th { background-color: #e9ecef; }
+        .syllable-symbol { font-family: 'Courier New', Courier, monospace; font-size: 1.2rem; font-weight: bold; }
+        .syllable-text { font-size: 1.2rem; font-weight: 700; }
+        .required-pattern-row td { background-color: #f0f9ff; color: #5a7a94; }
+        .required-pattern-row .forbidden { color: #dc3545; font-weight: bold; text-decoration: line-through; }
+        .mismatch { background-color: #fff3cd !important; color: #664d03 !important; position: relative; outline: 2px solid #ffc107; outline-offset: -2px; }
+        .mismatch::before { content: 'ผิด!'; position: absolute; top: 1px; left: 3px; font-size: 0.65rem; color: #dc3545; font-weight: bold; }
+        .edit-mode-input, .edit-mode-select { width: 100%; border: 1px solid #0d6efd; border-radius: 4px; text-align: center; font-family: inherit; }
+        .edit-mode-input { font-size: 1.1rem; font-weight: 700; }
+        .edit-mode-select { font-size: 1rem; }
+        .analysis-actions { margin-top: 1rem; padding: 1rem; background-color: #e9ecef; border-radius: 8px; text-align: center; border: 1px solid #dee2e6;}
+        .explanation-box { background-color: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem 2rem; }
+        .explanation-box ul { padding-left: 1.5rem; }
+        .explanation-box li { margin-bottom: 0.5rem; }
+        .explanation-box .sub-list { margin-top: 0.5rem; margin-left: 1rem; }
+        
+        /* สไตล์สำหรับผลการระบุฉันท์ */
+        #chanda-identification-results {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #e6ffe6;
+            border: 1px solid #cceeff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .chanda-match-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        .chanda-match-item:last-child {
+            border-bottom: none;
+        }
+        .chanda-match-item h5 {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .no-match-found {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="text-center mb-4"><a href="{{ url_for('index') }}" class="btn btn-outline-secondary">&larr; กลับไปหน้าหลัก</a></div>
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="p-3 mb-4 rounded bg-light border"><h2 class="h4 text-center">ระบุฉันท์อัตโนมัติ</h2></div>
+                <div id="pali-input-verses">
+                    <div class="verse-input-group"><label for="verse-1">บาทที่ ๑:</label><input type="text" id="verse-1" class="form-control" placeholder="ป้อนคาถาบาทที่ ๑"></div>
+                    <div class="verse-input-group"><label for="verse-2">บาทที่ ๒:</label><input type="text" id="verse-2" class="form-control" placeholder="ป้อนคาถาบาทที่ ๒"></div>
+                    <div class="verse-input-group"><label for="verse-3">บาทที่ ๓:</label><input type="text" id="verse-3" class="form-control" placeholder="ป้อนคาถาบาทที่ ๓"></div>
+                    <div class="verse-input-group"><label for="verse-4">บาทที่ ๔:</label><input type="text" id="verse-4" class="form-control" placeholder="ป้อนคาถาบาทที่ ๔"></div>
+                </div>
+                <div class="d-grid mt-4">
+                    <button id="analyze-btn" class="btn btn-primary btn-lg">แบ่งพยางค์</button> {# เปลี่ยนชื่อปุ่ม #}
+                </div>
+            </div>
+        </div>
+
+        <div id="analysis-container"></div>
+        
+        <!-- ส่วนแสดงผลการระบุฉันท์ -->
+        <div id="chanda-identification-results" class="d-none mt-4">
+            <h4 class="mb-3 text-center">ผลการระบุฉันท์</h4>
+            <div id="identification-list">
+                <!-- ผลลัพธ์จะถูกสร้างโดย JavaScript -->
+            </div>
+        </div>
+
+        <!-- ปุ่มสำหรับโหมดแก้ไข -->
+        <div id="analysis-actions-container" class="d-none">
+             <div class="analysis-actions alert alert-info text-center">
+                <h5 class="alert-heading">คำแนะนำ</h5>
+                <p class="mb-2" style="font-size: 0.95rem;">
+                    เนื่องจากการแบ่งพยางค์ที่มีความซับซ้อน โปรแกรมอาจวิเคราะห์ผิดพลาดได้<br>
+                    หากพบข้อผิดพลาด ท่านสามารถกดปุ่มด้านล่างเพื่อแก้ไขผลลัพธ์การแบ่งพยางค์ให้ถูกต้องได้ด้วยตนเอง
+                </p>
+                <hr>
+                <button id="re-analyze-btn" class="btn btn-success">ยืนยันและระบุฉันท์</button> {# ปุ่มยืนยัน #}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const analysisContainer = document.getElementById('analysis-container');
+        const chandaIdentificationResultsDiv = document.getElementById('chanda-identification-results');
+        const identificationListDiv = document.getElementById('identification-list');
+
+        const thai_numerals = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
+        function toThaiNumeral(n) { return String(n).split('').map(digit => thai_numerals[parseInt(digit, 10)]).join(''); }
+        
+        const actionsContainer = document.getElementById('analysis-actions-container');
+        const reAnalyzeBtn = document.getElementById('re-analyze-btn'); // ปุ่ม "ยืนยันและระบุฉันท์"
+
+        // === Event Listeners และ Logic หลักสำหรับหน้า identify_chanda.html ===
+        analyzeBtn.addEventListener('click', async () => {
+            const verseInputs = [
+                document.getElementById('verse-1').value,
+                document.getElementById('verse-2').value,
+                document.getElementById('verse-3').value,
+                document.getElementById('verse-4').value
+            ];
+
+            if (!verseInputs.some(v => v.trim())) {
+                showMessage('กรุณาป้อนข้อความอย่างน้อย ๑ บาท');
+                return;
+            }
+            showLoading();
+            
+            try {
+                // ส่งไปที่ API analyze เพื่อให้ Backend แบ่งพยางค์และวิเคราะห์ ครุ-ลหุ เบื้องต้น
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ verses: verseInputs })
+                });
+
+                if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+                const data = await response.json(); // ผลลัพธ์คือ prosody_results_by_verse
+                
+                // แสดงผลในตารางที่ "แก้ไขได้เฉพาะพยางค์"
+                // กำหนดจำนวนคอลัมน์สูงสุดที่คาดว่าจะเจอ (สมมติว่าเป็น 17 พยางค์สำหรับฉันท์ที่ยาวที่สุดที่อาจจะเจอ)
+                // หรือจะใช้ความยาวพยางค์ที่เยอะที่สุดจาก data.length ก็ได้ ถ้ามั่นใจว่าข้อมูลมาครบ
+                // สำหรับหน้านี้ เราไม่รู้ chandaPattern ล่วงหน้า
+                const maxSyllableLength = data.reduce((max, verse) => Math.max(max, verse.length), 0);
+                displayEditableSyllablesTable(data, maxSyllableLength > 0 ? maxSyllableLength : 8); // อย่างน้อย 8 คอลัมน์
+
+                // ซ่อนปุ่ม "แบ่งพยางค์" และแสดงปุ่ม "ยืนยันและระบุฉันท์"
+                analyzeBtn.classList.add('d-none');
+                actionsContainer.classList.remove('d-none');
+                reAnalyzeBtn.classList.remove('d-none'); 
+                
+                chandaIdentificationResultsDiv.classList.add('d-none'); // ซ่อนผลระบุฉันท์ก่อนยืนยัน
+
+            } catch (error) {
+                showError(error);
+            }
+        });
+
+        // ฟังก์ชันแสดงผลการระบุฉันท์
+        function displayIdentifiedChanda(identificationResults, chandaPatterns) {
+            identificationListDiv.innerHTML = '';
+            chandaIdentificationResultsDiv.classList.remove('d-none');
+
+            if (!identificationResults || identificationResults.length === 0) {
+                identificationListDiv.innerHTML = '<p class="text-center no-match-found">ไม่พบฉันท์ที่ตรงกัน</p>';
+                return;
+            }
+
+            identificationResults.forEach(verseResult => {
+                const verseNum = toThaiNumeral(verseResult.verse_num);
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'chanda-match-item';
+                
+                let matchesHtml = `<h5>บาทที่ ${verseNum}:</h5>`;
+                if (verseResult.matches && verseResult.matches.length > 0) {
+                    matchesHtml += `<ul>`;
+                    verseResult.matches.forEach(match => {
+                        const patternDetails = chandaPatterns[match.id] ? ` (${chandaPatterns[match.id].pattern.replace(/-/g, '–')})` : '';
+                        matchesHtml += `<li><strong>${match.name}</strong> ${patternDetails} - ${match.match_type}`;
+                        if (match.notes) {
+                            matchesHtml += `<br><small><em>(หมายเหตุ: ${match.notes})</em></small>`;
+                        }
+                        matchesHtml += `</li>`;
+                    });
+                    matchesHtml += `</ul>`;
+                } else {
+                    matchesHtml += `<p class="no-match-found">ไม่พบฉันท์ที่ตรงกัน</p>`;
+                    if (verseResult.notes) {
+                        matchesHtml += `<p><small><em>(หมายเหตุ: ${verseResult.notes})</em></small></p>`;
+                    }
+                }
+                itemDiv.innerHTML = matchesHtml;
+                identificationListDiv.appendChild(itemDiv);
+            });
+        }
+
+        // --- โหมดแก้ไขสำหรับหน้าระบุฉันท์ ---
+        reAnalyzeBtn.addEventListener('click', async () => {
+            const updatedVerseSyllablesOnly = collectEditableSyllablesOnly(); // <--- เก็บเฉพาะพยางค์ (string)
+
+            showLoading(); // แสดง loading อีกครั้งก่อนส่งไปวิเคราะห์ใหม่
+
+            try {
+                // ส่งเฉพาะพยางค์ (List of List of Strings) กลับไปให้ API identify_chanda_api
+                const response = await fetch('/api/identify_chanda', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ verses: updatedVerseSyllablesOnly })
+                });
+
+                if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+                const data = await response.json(); // ผลลัพธ์รวม (identification + prosody_results)
+                
+                // แสดงผลลัพธ์ใหม่ทั้งหมด
+                // คำนวณความยาวสูงสุดอีกครั้ง เพื่อให้ตารางแสดงคอลัมน์ครบถ้วน
+                const maxSyllableLength = data.prosody_results.reduce((max, verse) => Math.max(max, verse.length), 0);
+                displayGenericTable(data.prosody_results, maxSyllableLength > 0 ? maxSyllableLength : 8, null); // ส่ง null สำหรับ requiredPattern
+                displayIdentifiedChanda(data.identification.results_by_verse, data.identification.syllable_patterns);
+
+                // ซ่อนปุ่ม "ยืนยันและระบุฉันท์"
+                actionsContainer.classList.add('d-none');
+                analyzeBtn.classList.remove('d-none');
+
+            } catch (error) {
+                showError(error);
+            }
+        });
+
+        // === ฟังก์ชันใหม่: แสดงตารางในโหมดแก้ไขพยางค์เท่านั้น ===
+        function displayEditableSyllablesTable(versesData, fixedSyllableCount) {
+            let headerHTML = `<tr><th>รายละเอียด</th>`;
+            for(let i = 1; i <= fixedSyllableCount; i++) { headerHTML += `<th>${toThaiNumeral(i)}</th>`; }
+            headerHTML += '</tr>';
+
+            let tableHTML = `<table class="analysis-table mt-4"><thead class="header-row">${headerHTML}</thead><tbody>`;
+            versesData.forEach((verseSyllables, index) => {
+                if (verseSyllables.length === 0) return;
+                
+                let resultRow = `<tr data-row-type="result-symbol-row"><td>ผลการวิเคราะห์</td>`;
+                let syllableRow = `<tr class="table-group-divider" data-row-type="syllable-text-row"><td class="fw-bold">บาทที่ ${toThaiNumeral(index + 1)}</td>`;
+                
+                for (let i = 0; i < fixedSyllableCount; i++) { 
+                    if (i < verseSyllables.length) {
+                        const syl = verseSyllables[i];
+                        const resultSymbol = (syl.type === 'lahu') ? 'U' : '–';
+                        
+                        syllableRow += `<td class="syllable-text" data-col="${i}"><input type="text" class="edit-mode-input" value="${syl.syllable}"></td>`;
+                        resultRow += `<td class="syllable-symbol" data-col="${i}">${resultSymbol}</td>`;
+                    } else {
+                        syllableRow += `<td data-col="${i}"><input type="text" class="edit-mode-input" value="-"></td>`;
+                        resultRow += `<td data-col="${i}">-</td>`;
+                    }
+                }
+                syllableRow += '</tr>'; resultRow += '</tr>';
+                tableHTML += syllableRow + resultRow;
+            });
+            tableHTML += `</tbody></table>`;
+            analysisContainer.innerHTML = tableHTML;
+        }
+
+        // === ฟังก์ชัน collectEditableSyllablesOnly: เก็บเฉพาะพยางค์ (string) ===
+        function collectEditableSyllablesOnly() {
+            const newVerseData = [];
+            const rows = document.querySelectorAll('.analysis-table tbody tr[data-row-type="syllable-text-row"]');
+            rows.forEach((syllableRow) => {
+                const verseSyllables = [];
+                const syllableInputs = syllableRow.querySelectorAll('input.edit-mode-input');
+                syllableInputs.forEach(input => {
+                    const syllableText = input.value;
+                    if (syllableText && syllableText.trim() !== '' && syllableText !== '-') {
+                        verseSyllables.push(syllableText); // <--- เก็บแค่ string ของพยางค์
+                    }
+                });
+                newVerseData.push(verseSyllables);
+            });
+            return newVerseData;
+        }
+        
+        // --- ฟังก์ชัน displayGenericTable (แสดงผลลัพธ์สุดท้าย) ---
+        function displayGenericTable(versesData, syllableCount, requiredPattern = null) {
+            let headerHTML = `<tr><th>รายละเอียด</th>`;
+            for(let i = 1; i <= syllableCount; i++) { headerHTML += `<th>${toThaiNumeral(i)}</th>`; }
+            headerHTML += '</tr>';
+            let tableHTML = `<table class="analysis-table mt-4"><thead class="header-row">${headerHTML}</thead><tbody>`;
+            versesData.forEach((verseSyllables, index) => {
+                if (verseSyllables.length === 0) return;
+                
+                let resultRow = `<tr data-row-type="result-symbol-row"><td>ผลการวิเคราะห์</td>`;
+                let syllableRow = `<tr class="table-group-divider" data-row-type="syllable-text-row"><td class="fw-bold">บาทที่ ${toThaiNumeral(index + 1)}</td>`;
+                for (let i = 0; i < syllableCount; i++) {
+                    if (i < verseSyllables.length) {
+                        const syl = verseSyllables[i];
+                        const resultSymbol = (syl.type === 'lahu') ? 'U' : '–';
+                        resultRow += `<td class="syllable-symbol" data-col="${i}">${resultSymbol}</td>`;
+                        syllableRow += `<td class="syllable-text" data-col="${i}">${syl.syllable}</td>`;
+                    } else {
+                        resultRow += `<td data-col="${i}">-</td>`;
+                        syllableRow += `<td data-col="${i}">-</td>`;
+                    }
+                }
+                resultRow += '</tr>'; syllableRow += '</tr>';
+                tableHTML += syllableRow + resultRow;
+            });
+            tableHTML += `</tbody></table>`;
+            analysisContainer.innerHTML = tableHTML;
+        }
+
+        // ฟังก์ชันช่วยอื่นๆ
+        function getVerseInputs() { return [document.getElementById('verse-1').value, document.getElementById('verse-2').value, document.getElementById('verse-3').value, document.getElementById('verse-4').value]; }
+        function showLoading() { analysisContainer.innerHTML = '<div class="d-flex justify-content-center mt-4"><div class="spinner-border text-primary" role="status"></div></div>'; chandaIdentificationResultsDiv.classList.add('d-none'); document.getElementById('analysis-actions-container').classList.add('d-none'); }
+        function showError(error) { analysisContainer.innerHTML = `<p class="text-danger text-center mt-4">เกิดข้อผิดพลาด: ${error.message}</p>`; chandaIdentificationResultsDiv.classList.add('d-none'); document.getElementById('analysis-actions-container').classList.add('d-none'); }
+        function showMessage(message) { analysisContainer.innerHTML = `<p class="text-center text-muted mt-4">${message}</p>`; chandaIdentificationResultsDiv.classList.add('d-none'); document.getElementById('analysis-actions-container').classList.add('d-none'); }
+    </script>
+</body>
+</html>

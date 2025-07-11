@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - เพิ่มฉันท์ใหม่</title>
+    <!-- === ตรวจสอบให้แน่ใจว่าลิงก์ Bootstrap ถูกต้อง === -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Sarabun', sans-serif; padding: 2rem; } </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">เพิ่มฉันท์ใหม่</h1>
+        <!-- === ส่วนสำหรับแสดงข้อความแจ้งเตือน (Flash Messages) === -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <!-- ==================================================== -->
+        <form method="POST" action="{{ url_for('admin_add_chanda') }}">
+            <div class="mb-3">
+                <label for="chanda_id" class="form-label">Chanda ID (เช่น pathyavatta)</label>
+                <input type="text" class="form-control" id="chanda_id" name="chanda_id" required value="{{ chanda_id if chanda_id else '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">ชื่อฉันท์ (เช่น ปัฐยาวัตรฉันท์ ๘)</label>
+                <input type="text" class="form-control" id="name" name="name" required value="{{ name if name else '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="pattern" class="form-label">รูปแบบ (เช่น --U--UU-U--)</label>
+                <input type="text" class="form-control" id="pattern" name="pattern" required value="{{ pattern if pattern else '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="syllable_count" class="form-label">จำนวนพยางค์</label>
+                <input type="number" class="form-control" id="syllable_count" name="syllable_count" required value="{{ syllable_count if syllable_count else '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="chanda_type" class="form-label">ประเภท (vutta หรือ variable_vutta)</label>
+                <select class="form-select" id="chanda_type" name="chanda_type">
+                    <option value="vutta" {% if chanda_type == 'vutta' %}selected{% endif %}>vutta</option>
+                    <option value="variable_vutta" {% if chanda_type == 'variable_vutta' %}selected{% endif %}>variable_vutta</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="description_short" class="form-label">คำอธิบายสั้นๆ (จะใช้ในหน้าวิเคราะห์)</label>
+                <textarea class="form-control" id="description_short" name="description_short" rows="3">{{ description_short if description_short else '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="pariyat_url" class="form-label">ลิงก์ Pariyat.com (ถ้ามี)</label>
+                <input type="url" class="form-control" id="pariyat_url" name="pariyat_url" value="{{ pariyat_url if pariyat_url else '' }}">
+            </div>
+            <button type="submit" class="btn btn-primary">บันทึกฉันท์</button>
+            <a href="{{ url_for('admin_home') }}" class="btn btn-secondary">ยกเลิก</a>
+        </form>
+    </div>
+    <!-- === ตรวจสอบให้แน่ใจว่าลิงก์ Bootstrap JS ถูกต้อง === -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

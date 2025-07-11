@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - แก้ไขฉันท์</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style> body { font-family: 'Sarabun', sans-serif; padding: 2rem; } </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">แก้ไขฉันท์: {{ chanda.name }}</h1>
+        <form method="POST" action="{{ url_for('admin_edit_chanda', chanda_id=chanda.chanda_id) }}">
+            <div class="mb-3">
+                <label for="chanda_id" class="form-label">Chanda ID (ไม่สามารถแก้ไขได้)</label>
+                <input type="text" class="form-control" id="chanda_id" name="chanda_id" value="{{ chanda.chanda_id }}" readonly>
+            </div>
+            <div class="mb-3">
+                <label for="name" class="form-label">ชื่อฉันท์</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ chanda.name }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="pattern" class="form-label">รูปแบบ</label>
+                <input type="text" class="form-control" id="pattern" name="pattern" value="{{ chanda.pattern }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="syllable_count" class="form-label">จำนวนพยางค์</label>
+                <input type="number" class="form-control" id="syllable_count" name="syllable_count" value="{{ chanda.syllable_count }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="chanda_type" class="form-label">ประเภท</label>
+                <select class="form-select" id="chanda_type" name="chanda_type">
+                    <option value="vutta" {% if chanda.chanda_type == 'vutta' %}selected{% endif %}>vutta</option>
+                    <option value="variable_vutta" {% if chanda.chanda_type == 'variable_vutta' %}selected{% endif %}>variable_vutta</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="description_short" class="form-label">คำอธิบายสั้นๆ</label>
+                <textarea class="form-control" id="description_short" name="description_short" rows="3">{{ chanda.description_short }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="pariyat_url" class="form-label">ลิงก์ Pariyat.com (ถ้ามี)</label>
+                <input type="url" class="form-control" id="pariyat_url" name="pariyat_url" value="{{ chanda.pariyat_url if chanda.pariyat_url else '' }}"> {# <--- แก้ไขบรรทัดนี้ #}
+            </div>
+            <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
+            <a href="{{ url_for('admin_home') }}" class="btn btn-secondary">ยกเลิก</a>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,119 +1,162 @@
-from flask import Flask, render_template, request, jsonify
+# app.py
+
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
+from extensions import db, migrate
 
 app = Flask(__name__)
 
 # ======================================================================
-#  ส่วนฐานข้อมูลและค่าคงที่
+#  ส่วนสร้าง Flask App และตั้งค่า
 # ======================================================================
+def create_app():
+    app = Flask(__name__)
 
-CHANDA_PATTERNS = {
-    "pathyavatta":    {"name": "ปัฐยาวัตรฉันท์ ๘",     "pattern": "....U-U-"},
-    "indavajira":     {"name": "อินทรวิเชียรฉันท์ ๑๑",   "pattern": "--U--UU-U--"},
-    "upendavajira":   {"name": "อุเปนทรวิเชียรฉันท์ ๑๑", "pattern": "U-U--UU-U--"},
-    "indavamsa":      {"name": "อินทรวงศ์ฉันท์ ๑๒",      "pattern": "--U--UU-U-U-"},
-    "vamsattha":      {"name": "วังสัฏฐฉันท์ ๑๒",       "pattern": "U-U--UU-U-U-"},
-    "vasantatilaka":  {"name": "วสันตดิลกฉันท์ ๑๔",   "pattern": "--U-UUU-UU-U--"},
-}
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECRET_KEY'] = 'your_super_secret_key_here' 
 
-def generate_syllable_db():
-    db = {}
-    consonants = "กขคฆงจฉชฌญฏฐฑฒณตถทธนปผพภมยรลวสหฬ"
-    vowels = {"": "lahu", "า": "garu", "ิ": "lahu", "ี": "garu", "ุ": "lahu", "ู": "garu", "เ": "garu", "โ": "garu"}
-    preceding_vowels = "เโ"
-    for c in consonants:
-        for v, v_type in vowels.items():
-            syllable = (v + c) if v in preceding_vowels else (c + v)
-            db[syllable] = {"type": v_type}
-    db.update({"อ": {"type": "lahu"}, "อา": {"type": "garu"}, "อิ": {"type": "lahu"}, "อี": {"type": "garu"}, "อุ": {"type": "lahu"}, "อู": {"type": "garu"}, "เอ": {"type": "garu"}, "โอ": {"type": "garu"}})
-    for c in consonants + "อ":
-        db[c + "ํ"] = {"type": "garu"}
-        db[c + "ึ"] = {"type": "garu"}
-        db[c + "ุํ"] = {"type": "garu"}
-    return db
+    db.init_app(app)
+    migrate.init_app(app, db)
 
-SYLLABLE_DB = generate_syllable_db()
-POSSIBLE_SYLLABLES = sorted(SYLLABLE_DB.keys(), key=len, reverse=True)
-CONSONANTS = "กขคฆงจฉชฌญฏฐฑฒณตถทธนปผพภมยรลวสหฬ"
-VIRAMA_CONSONANTS = [c + "ฺ" for c in CONSONANTS]
+    from models import Chanda, syllabify_and_analyze, analyze_prosody, identify_chanda_logic
 
-# ======================================================================
-#  ส่วน Logic การวิเคราะห์
-# ======================================================================
-def syllabify_and_analyze(text: str) -> list:
-    allowed_chars = "กขคฆงจฉชฌญฏฐฑฒณตถทธนปผพภมยรลวสหฬ" \
-                    "ออาอิอีอุอูเอโอ" \
-                    "าิีุูเโฺํึ"
-    cleaned_text = "".join(char for char in text if char in allowed_chars)
-    text = cleaned_text
-    if not text: return []
-    raw_syllables, i = [], 0
-    while i < len(text):
-        found_syllable = None
-        for key in POSSIBLE_SYLLABLES:
-            if text[i:].startswith(key):
-                found_syllable = key
-                break
-        if not found_syllable:
-            if i + 1 < len(text) and text[i:i+2] in VIRAMA_CONSONANTS:
-                found_syllable = text[i:i+2]
-            else:
-                found_syllable = text[i]
-        current_position = i + len(found_syllable)
-        coda = ""
-        if current_position + 1 < len(text):
-            possible_coda = text[current_position:current_position+2]
-            if possible_coda in VIRAMA_CONSONANTS: coda = possible_coda
-        full_syllable = found_syllable + coda
-        raw_syllables.append(full_syllable)
-        i += len(full_syllable)
-    return analyze_prosody(raw_syllables)
+    # ======================================================================
+    #  ส่วนของ Web Server (Routes)
+    # ======================================================================
+    @app.route('/')
+    def index():
+        chandas_from_db = Chanda.query.order_by(Chanda.syllable_count).all()
+        chandas_dict = {c.chanda_id: {"name": c.name, "pattern": c.pattern, "syllable_count": c.syllable_count, "type": c.chanda_type, "description_short": c.description_short, "pariyat_url": c.pariyat_url} for c in chandas_from_db}
+        return render_template('index.html', chandas=chandas_dict)
 
-def analyze_prosody(raw_syllables: list) -> list:
-    syllables_result = []
-    for j, syl in enumerate(raw_syllables):
-        analysis = {"syllable": syl, "type": "lahu"}
-        base_syl, coda_part = syl, ""
-        if len(syl) > 2 and syl[-2:] in VIRAMA_CONSONANTS:
-            base_syl, coda_part = syl[:-2], syl[-2:]
-        if coda_part or (base_syl in SYLLABLE_DB and SYLLABLE_DB[base_syl]["type"] == "garu"):
-            analysis["type"] = "garu"
-        elif base_syl in SYLLABLE_DB:
-            analysis["type"] = SYLLABLE_DB[base_syl]["type"]
+    @app.route('/analyzer/<chanda_id>')
+    def analyzer_page(chanda_id):
+        chanda_info = Chanda.query.filter_by(chanda_id=chanda_id).first()
+        if not chanda_info: return "ไม่พบฉันท์ที่ระบุ", 404
+        chanda_data = {"name": chanda_info.name, "pattern": chanda_info.pattern, "syllable_count": chanda_info.syllable_count, "type": chanda_info.chanda_type, "description_short": chanda_info.description_short, "pariyat_url": chanda_info.pariyat_url}
+        return render_template('analyzer.html', chanda=chanda_data, chanda_id=chanda_id)
+
+    @app.route('/identify_chanda')
+    def identify_chanda_page():
+        return render_template('identify_chanda.html')
+
+    # ======================================================================
+    #  API สำหรับวิเคราะห์ (ใช้ทั้งการแบ่งพยางค์เริ่มต้น และวิเคราะห์ซ้ำ)
+    # ======================================================================
+    @app.route('/api/analyze', methods=['POST'])
+    def analyze_api():
+        data = request.get_json()
+        # data['verses'] จะเป็น list ของ string (ข้อความดิบ)
+        # หรือ list ของ list ของ string (พยางค์ที่แบ่งแล้วจาก Frontend)
+        if not data or 'verses' not in data or not isinstance(data['verses'], list):
+            return jsonify({'error': 'Invalid input, expected a list of verses.'}), 400
         
-        # เราจะไม่ใช้กฎการมองไปข้างหน้าที่ซับซ้อน เพื่อความเสถียร
-        # if analysis["type"] == "lahu" and j + 1 < len(raw_syllables):
-        #     ...
+        results_by_verse = []
+        # ตรวจสอบว่า input เป็นข้อความดิบ หรือพยางค์ที่แบ่งแล้ว
+        if all(isinstance(v, str) for v in data['verses']): # ถ้าเป็นข้อความดิบ (จากปุ่ม "แบ่งพยางค์" ครั้งแรก)
+            for verse_text in data['verses']:
+                syllables = syllabify_and_analyze(verse_text) # ทำการแบ่งและวิเคราะห์ ครุ-ลหุ
+                results_by_verse.append(syllables)
+        elif all(isinstance(v, list) and all(isinstance(s, str) for s in v) for v in data['verses']): # ถ้าเป็นพยางค์ที่แบ่งแล้ว (จากปุ่ม "ยืนยันและวิเคราะห์")
+            for verse_syllables_list in data['verses']:
+                analyzed_syllables = analyze_prosody(verse_syllables_list) # แค่วิเคราะห์ ครุ-ลหุ ใหม่
+                results_by_verse.append(analyzed_syllables)
+        else:
+            return jsonify({'error': 'Invalid input format.'}), 400
+            
+        return jsonify(results_by_verse)
+
+    @app.route('/api/identify_chanda', methods=['POST'])
+    def identify_chanda_api():
+        data = request.get_json()
+        if not data or 'verses' not in data or not isinstance(data['verses'], list):
+            return jsonify({'error': 'Invalid input, expected a list of verses.'}), 400
         
-        syllables_result.append(analysis)
-    return syllables_result
+        # ========== START: ส่วนที่แก้ไข ==========
+        # ในขั้นตอนนี้ 'verses' ที่ส่งมาจาก frontend คือรายการพยางค์ที่ผู้ใช้แก้ไขแล้ว
+        # (เช่น [['สุ', 'ขา'], ['สงฺ', 'ฆสฺ', 'ส']])
+        # เราจึงไม่ใช้ syllabify_and_analyze แต่จะใช้ analyze_prosody เพื่อวิเคราะห์ครุ-ลหุจากพยางค์ที่ได้รับมาโดยตรง
+        
+        prosody_results_by_verse = []
+        # ตรวจสอบให้แน่ใจว่าเป็น list of lists of strings
+        if not all(isinstance(v, list) and all(isinstance(s, str) for s in v) for v in data['verses']):
+             return jsonify({'error': 'Invalid input format. Expected a list of lists of syllables.'}), 400
 
-# ======================================================================
-#  ส่วนของ Web Server (Routes)
-# ======================================================================
-@app.route('/')
-def index():
-    return render_template('index.html', chandas=CHANDA_PATTERNS)
+        for verse_syllables_list in data['verses']:
+            # วิเคราะห์ครุ-ลหุจากพยางค์ที่ถูกแก้ไขแล้ว
+            analyzed_syllables = analyze_prosody(verse_syllables_list) 
+            prosody_results_by_verse.append(analyzed_syllables)
+        
+        # ========== END: ส่วนที่แก้ไข ==========
 
-@app.route('/analyzer/<chanda_id>')
-def analyzer_page(chanda_id):
-    chanda_info = CHANDA_PATTERNS.get(chanda_id)
-    if not chanda_info: return "ไม่พบฉันท์ที่ระบุ", 404
-    return render_template('analyzer.html', chanda=chanda_info, chanda_id=chanda_id)
+        # ส่งผลการวิเคราะห์ครุ-ลหุ (จากพยางค์ที่แก้ไขแล้ว) ไปยังฟังก์ชันระบุฉันท์
+        identification_results = identify_chanda_logic(prosody_results_by_verse, db, Chanda)
+        
+        # ส่งผลลัพธ์ทั้งหมดกลับไปให้ frontend
+        # "identification" คือผลการระบุฉันท์
+        # "prosody_results" คือผลการวิเคราะห์ครุ-ลหุจากพยางค์ที่ผู้ใช้แก้ไขล่าสุด เพื่อให้ตารางแสดงผลถูกต้อง
+        return jsonify({
+            "identification": identification_results,
+            "prosody_results": prosody_results_by_verse
+        })
 
-@app.route('/api/analyze', methods=['POST'])
-def analyze_api():
-    data = request.get_json()
-    if not data or 'verses' not in data or not isinstance(data['verses'], list):
-        return jsonify({'error': 'Invalid input, expected a list of verses.'}), 400
-    results_by_verse = []
-    for verse_text in data['verses']:
-        syllables = syllabify_and_analyze(verse_text)
-        results_by_verse.append(syllables)
-    return jsonify(results_by_verse)
+    # ======================================================================
+    #  Admin Panel Routes (ไม่มีการแก้ไข)
+    # ======================================================================
+    @app.route('/admin')
+    def admin_home():
+        chandas = Chanda.query.order_by(Chanda.syllable_count).all()
+        return render_template('admin/index.html', chandas=chandas)
 
-# ไม่จำเป็นต้องมี /api/re_analyze แล้ว เพราะการคำนวณใหม่เกิดขึ้นที่ Frontend ทั้งหมด
-# if __name__ == '__main__':
-#    ...
+    @app.route('/admin/add', methods=['GET', 'POST'])
+    def admin_add_chanda():
+        if request.method == 'POST':
+            chanda_id = request.form['chanda_id']
+            name = request.form['name']
+            pattern = request.form['pattern']
+            syllable_count = int(request.form['syllable_count'])
+            chanda_type = request.form['chanda_type']
+            description_short = request.form['description_short']
+            pariyat_url = request.form['pariyat_url']
+            
+            existing_chanda = Chanda.query.filter_by(chanda_id=chanda_id).first()
+            if existing_chanda:
+                flash(f"ข้อผิดพลาด: Chanda ID '{chanda_id}' นี้มีอยู่แล้ว กรุณาใช้ ID อื่น หรือไปแก้ไขข้อมูลเดิม", 'danger')
+                return render_template('admin/add.html', 
+                                       chanda_id=chanda_id, name=name, pattern=pattern, 
+                                       syllable_count=syllable_count, chanda_type=chanda_type, 
+                                       description_short=description_short, pariyat_url=pariyat_url)
+                
+            new_chanda = Chanda(chanda_id=chanda_id, name=name, pattern=pattern, 
+                                syllable_count=syllable_count, chanda_type=chanda_type, 
+                                description_short=description_short, pariyat_url=pariyat_url)
+            db.session.add(new_chanda)
+            db.session.commit()
+            flash(f"เพิ่มฉันท์ '{name}' สำเร็จแล้ว!", 'success')
+            return redirect(url_for('admin_home'))
+        return render_template('admin/add.html', chanda_id='', name='', pattern='', syllable_count='', chanda_type='vutta', description_short='', pariyat_url='')
 
-if __name__ == '__main__':
-    app.run(debug=True)
+    @app.route('/admin/edit/<string:chanda_id>', methods=['GET', 'POST'])
+    def admin_edit_chanda(chanda_id):
+        chanda_to_edit = Chanda.query.filter_by(chanda_id=chanda_id).first_or_404()
+        if request.method == 'POST':
+            chanda_to_edit.name = request.form['name']
+            chanda_to_edit.pattern = request.form['pattern']
+            chanda_to_edit.syllable_count = int(request.form['syllable_count'])
+            chanda_to_edit.chanda_type = request.form['chanda_type']
+            chanda_to_edit.description_short = request.form['description_short']
+            chanda_to_edit.pariyat_url = request.form['pariyat_url']
+            db.session.commit()
+            flash(f"แก้ไขฉันท์ '{chanda_to_edit.name}' สำเร็จแล้ว!", 'success')
+            return redirect(url_for('admin_home'))
+        return render_template('admin/edit.html', chanda=chanda_to_edit)
+    
+    @app.route('/admin/delete/<string:chanda_id>', methods=['POST'])
+    def admin_delete_chanda(chanda_id):
+        chanda_to_delete = Chanda.query.filter_by(chanda_id=chanda_id).first_or_404()
+        db.session.delete(chanda_to_delete)
+        db.session.commit()
+        flash(f"ลบฉันท์ '{chanda_to_delete.name}' สำเร็จแล้ว!", 'success')
+        return redirect(url_for('admin_home'))
+    
+    return app
