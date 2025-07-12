@@ -22,50 +22,100 @@
         .syllable-desc-container { display: flex; justify-content: space-around; width: 100%; }
         .syllable-desc { font-size: 0.85rem; color: #6c757d; flex: 1; }
         .action-box { background-color: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.1); margin-top: 2rem; }
+        .or-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: #6c757d;
+            margin: 1.5rem 0;
+        }
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .or-divider:not(:empty)::before {
+            margin-right: .25em;
+        }
+        .or-divider:not(:empty)::after {
+            margin-left: .25em;
+        }
     </style>
 </head>
 <body>
+
     <header class="hero">
         <h1 class="display-5">เครื่องมือวิเคราะห์ฉันทลักษณ์บาลี</h1>
         <p class="lead">เรียนรู้และตรวจสอบความถูกต้องของฉันท์ในภาษาบาลี</p>
     </header>
+
     <main class="container">
-        <section>
-            <h2 class="section-title">คณะฉันท์ทั้ง ๘</h2>
-            <p class="text-center text-muted mb-4">การเรียกชื่อคณะฉันท์ทั้ง ๘ ตามพระนามของพระพุทธเจ้า เพื่อให้ง่ายต่อการจดจำ</p>
-            <div class="row g-4">
-                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ม-คณะ</div><div class="gana-example">สพฺพญฺญู</div></div><div><div class="gana-pattern"><span>–</span><span>–</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div></div></div></div></div>
-                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">น-คณะ</div><div class="gana-example">สุมุนิ</div></div><div><div class="gana-pattern"><span>U</span><span>U</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div></div></div></div></div>
-                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ส-คณะ</div><div class="gana-example">สุคโต</div></div><div><div class="gana-pattern"><span>U</span><span>U</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div></div></div></div></div>
-                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ช-คณะ</div><div class="gana-example">มุนินฺท</div></div><div><div class="gana-pattern"><span>U</span><span>–</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div></div></div></div></div>
-                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ต-คณะ</div><div class="gana-example">มาราชิ</div></div><div><div class="gana-pattern"><span>–</span><span>–</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div></div></div></div></div>
-                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ภ-คณะ</div><div class="gana-example">มารชิ</div></div><div><div class="gana-pattern"><span>–</span><span>U</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div></div></div></div></div>
-                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ร-คณะ</div><div class="gana-example">นายโก</div></div><div><div class="gana-pattern"><span>–</span><span>U</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div></div></div></div></div>
-                <div class="col-md-3 col-6"><div class="gana-card"><div><div class="gana-name">ย-คณะ</div><div class="gana-example">มเหสี</div></div><div><div class="gana-pattern"><span>U</span><span>–</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div></div></div></div></div>
+        <div class="row mt-5">
+            <!-- === ส่วนเลือกฉันท์เพื่อตรวจสอบ (ย้ายมาไว้ด้านซ้าย) === -->
+            <div class="col-lg-5 mb-4">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <h3 class="card-title text-center mb-3" style="font-weight: 500;">เครื่องมือวิเคราะห์ฉันท์</h3>
+                        
+                        <!-- === ส่วนเลือกฉันท์ที่รู้จัก === -->
+                        <p class="text-center text-muted mb-2">เลือกประเภทฉันท์ที่ต้องการตรวจสอบ</p>
+                        <form id="chanda-form">
+                            <div class="input-group">
+                                <select class="form-select form-select-lg" id="chanda-select">
+                                    <option selected disabled>--- กรุณาเลือกฉันท์ ---</option>
+                                    {% for id, chanda in chandas.items() %}
+                                        <option value="{{ id }}">{{ chanda.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-primary" type="submit" style="font-weight: 500;">เลือก</button>
+                            </div>
+                        </form>
+                        
+                        <!-- === เส้นคั่น "หรือ" === -->
+                        <div class="or-divider">หรือ</div>
+                        
+                        <!-- === ส่วนระบุฉันท์อัตโนมัติ === -->
+                        <p class="text-center text-muted mb-2">หากไม่ทราบประเภทของฉันท์</p>
+                        <div class="d-grid">
+                            <a href="{{ url_for('identify_chanda_page') }}" class="btn btn-outline-success btn-lg">ระบุฉันท์อัตโนมัติ</a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
-        <section class="mt-5 mb-5">
-            <div class="row justify-content-center">
-                <div class="col-lg-8"><div class="action-box text-center"><h3 class="mb-3" style="font-weight: 500;">เลือกฉันท์เพื่อเริ่มการวิเคราะห์ หรือระบุฉันท์</h3><form id="chanda-form"><div class="input-group input-group-lg"><select class="form-select" id="chanda-select"><option selected disabled>--- กรุณาเลือกประเภทฉันท์ ---</option>
-                {% for id, chanda in chandas.items() %}
-                    <option value="{{ id }}">{{ chanda.name }}</option>
-                {% endfor %}
-                    <option value="identify_chanda">ระบุฉันท์อัตโนมัติ (ตรวจสอบฉันท์ใดๆ)</option>
-                </select><button class="btn btn-primary" type="submit" style="font-weight: 500;">ตรวจสอบ</button></div></form></div></div>
+
+            <!-- === ส่วนให้ความรู้เรื่องคณะฉันท์ (อยู่ด้านขวา) === -->
+            <div class="col-lg-7">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title text-center mb-3">คณะฉันท์ทั้ง ๘</h3>
+                        <p class="text-center text-muted small">การเรียกชื่อคณะฉันท์ทั้ง ๘ ตามพระนามของพระพุทธเจ้า เพื่อให้ง่ายต่อการจดจำ</p>
+                        <div class="row g-3">
+                            <div class="col-4"><div class="gana-card"><div class="gana-name">ม-คณะ</div><div class="gana-example">สพฺพญฺญู</div><div class="gana-pattern"><span>–</span><span>–</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div></div></div></div>
+                            <div class="col-4"><div class="gana-card"><div class="gana-name">น-คณะ</div><div class="gana-example">สุมุนิ</div><div class="gana-pattern"><span>U</span><span>U</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div></div></div></div>
+                            <div class="col-4"><div class="gana-card"><div class="gana-name">ส-คณะ</div><div class="gana-example">สุคโต</div><div class="gana-pattern"><span>U</span><span>U</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div></div></div></div>
+                            <div class="col-4"><div class="gana-card"><div class="gana-name">ช-คณะ</div><div class="gana-example">มุนินฺท</div><div class="gana-pattern"><span>U</span><span>–</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div></div></div></div>
+                            <div class="col-4"><div class="gana-card"><div class="gana-name">ต-คณะ</div><div class="gana-example">มาราชิ</div><div class="gana-pattern"><span>–</span><span>–</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div></div></div></div>
+                            <div class="col-4"><div class="gana-card"><div class="gana-name">ภ-คณะ</div><div class="gana-example">มารชิ</div><div class="gana-pattern"><span>–</span><span>U</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div></div></div></div>
+                            <div class="col-4"><div class="gana-card"><div class="gana-name">ร-คณะ</div><div class="gana-example">นายโก</div><div class="gana-pattern"><span>–</span><span>U</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div></div></div></div>
+                            <div class="col-4"><div class="gana-card"><div class="gana-name">ย-คณะ</div><div class="gana-example">มเหสี</div><div class="gana-pattern"><span>U</span><span>–</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div></div></div></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
     </main>
-    <footer class="text-center text-muted p-4"><p>&copy; ๒๕๖๗ - พัฒนาเพื่อการศึกษาฉันทลักษณ์บาลี</p></footer>
+    
+    <footer class="text-center text-muted p-4 mt-5">
+        <p>&copy; ๒๕๖๗ - พัฒนาเพื่อการศึกษาฉันทลักษณ์บาลี</p>
+    </footer>
+
     <script>
         document.getElementById('chanda-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const selectedChandaId = document.getElementById('chanda-select').value;
-            if (selectedChandaId && selectedChandaId !== '--- กรุณาเลือกประเภทฉันท์ ---') {
-                if (selectedChandaId === 'identify_chanda') {
-                    window.location.href = `/identify_chanda`;
-                } else {
-                    window.location.href = `/analyzer/${selectedChandaId}`;
-                }
+            if (selectedChandaId && selectedChandaId !== '--- กรุณาเลือกฉันท์ ---') {
+                window.location.href = `/analyzer/${selectedChandaId}`;
             } else { alert('กรุณาเลือกฉันท์ที่ต้องการตรวจสอบก่อนครับ'); }
         });
     </script>
