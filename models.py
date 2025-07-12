@@ -1,6 +1,10 @@
 # models.py
 
 from extensions import db
+# +++ เพิ่ม import ที่จำเป็นสำหรับระบบล็อกอิน +++
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+# ----------------------------------------------
 
 # ======================================================================
 #  Database Model: Chanda (ตารางเก็บข้อมูลฉันท์)
@@ -18,18 +22,33 @@ class Chanda(db.Model):
     def __repr__(self):
         return f"Chanda('{self.name}', '{self.pattern}')"
 
+# +++ เพิ่ม Class User สำหรับเก็บข้อมูลผู้ใช้ Admin +++
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+# --------------------------------------------------
+
 # ======================================================================
-#  ส่วน Logic การวิเคราะห์ (แก้ไข generate_syllable_db)
+#  ส่วน Logic การวิเคราะห์ (ไม่มีการเปลี่ยนแปลง)
 # ======================================================================
 
 def generate_syllable_db():
+    # ... โค้ดเดิม ไม่มีการเปลี่ยนแปลง ...
     db = {}
     consonants = "กขคฆงจฉชฌญฏฐฑฒณตถทธนปผพภมยรลวสหฬ"
     
-    # 1. สร้างพยางค์ พยัญชนะ + สระ (เช่น ก, กา, กิ)
-    #    ตรวจสอบให้แน่ใจว่า 'อะ' แฝงถูกจัดเป็น 'lahu' ในขั้นตอนนี้
     vowels_map = {
-        '': {'type': 'lahu'}, # สระอะแฝง (เช่น ก)
+        '': {'type': 'lahu'},
         'า': {'type': 'garu'}, 'ิ': {'type': 'lahu'}, 'ี': {'type': 'garu'},
         'ุ': {'type': 'lahu'}, 'ู': {'type': 'garu'}, 'เ': {'type': 'garu'},
         'โ': {'type': 'garu'}
@@ -39,9 +58,8 @@ def generate_syllable_db():
     for c in consonants:
         for v_char, props in vowels_map.items():
             syllable_form = (v_char + c) if v_char in preceding_vowels else (c + v_char)
-            db[syllable_form] = props.copy() # ใช้ .copy() เพื่อไม่ให้ reference กัน
+            db[syllable_form] = props.copy()
             
-    # 2. สร้างสระลอย (อ, อา, อิ, ...)
     db.update({
         "อ": {"type": "lahu"}, "อา": {"type": "garu"}, 
         "อิ": {"type": "lahu"}, "อี": {"type": "garu"}, 
@@ -49,18 +67,13 @@ def generate_syllable_db():
         "เอ": {"type": "garu"}, "โอ": {"type": "garu"}
     })
 
-    # 3. สร้างพยางค์ที่มีนิคหิตและสระอึ (เป็นครุเสมอ)
-    #    เหล่านี้จะถูกเพิ่มทับลงใน DB ทำให้มันเป็น Garu โดยอัตโนมัติ
     for c in consonants + "อ":
-        db[c + "ํ"] = {"type": "garu"} # กํ
-        db[c + "ึ"] = {"type": "garu"} # กึ
-        db[c + "ุํ"] = {"type": "garu"} # กุํ
+        db[c + "ํ"] = {"type": "garu"}
+        db[c + "ึ"] = {"type": "garu"}
+        db[c + "ุํ"] = {"type": "garu"}
     
-    # === บังคับให้พยัญชนะเดี่ยว (สระอะแฝง) เป็น Lahu 100% ===
-    # อันนี้จะถูกรันเป็นลำดับสุดท้าย เพื่อบังคับค่าให้ถูกต้อง
     for c in consonants:
         db[c] = {"type": "lahu"} 
-    # =========================================================
     
     return db
 
@@ -71,6 +84,7 @@ VIRAMA_CONSONANTS = [c + "ฺ" for c in CONSONANTS]
 VIRAMA = "ฺ"
 
 def syllabify_and_analyze(text: str) -> list:
+    # ... โค้ดเดิม ไม่มีการเปลี่ยนแปลง ...
     allowed_chars = "กขคฆงจฉชฌญฏฐฑฒณตถทธนปผพภมยรลวสหฬ" \
                     "ออาอิอีอุอูเอโอ" \
                     "าิีุูเโฺํึ"
@@ -101,30 +115,24 @@ def syllabify_and_analyze(text: str) -> list:
     return analyze_prosody(raw_syllables)
 
 def analyze_prosody(raw_syllables: list) -> list:
+    # ... โค้ดเดิม ไม่มีการเปลี่ยนแปลง ...
     syllables_result = []
     
-    for j, syl_str in enumerate(raw_syllables): # วนลูปผ่าน string พยางค์
-        analysis = {"syllable": syl_str, "type": "lahu"} # เริ่มต้นเป็นลหุ
+    for j, syl_str in enumerate(raw_syllables):
+        analysis = {"syllable": syl_str, "type": "lahu"}
 
-        # กฎการเป็น ครุ
-        # 1. มีนิคหิต (ํ) หรือ สระอึ (ึ) หรือ สระอุ+นิคหิต (ุํ)
         if "ํ" in syl_str or "ึ" in syl_str or "ุํ" in syl_str:
             analysis["type"] = "garu"
-        # 2. มีพินทุ (ฺ) เป็นตัวสะกด
         elif "ฺ" in syl_str:
             analysis["type"] = "garu"
-        # 3. ค้นหาใน SYLLABLE_DB (ซึ่งตอนนี้บังคับ Lahu ให้พยัญชนะโดดๆ แล้ว)
-        #    ถ้าพยางค์พื้นฐานอยู่ใน DB และถูกจัดเป็น 'garu' ก็คือครุ
         elif syl_str in SYLLABLE_DB and SYLLABLE_DB[syl_str]["type"] == "garu":
             analysis["type"] = "garu"
         
         syllables_result.append(analysis)
     return syllables_result
 
-# ======================================================================
-#  Logic สำหรับการระบุฉันท์อัตโนมัติ (รับ db และ Chanda ผ่าน parameter)
-# ======================================================================
 def identify_chanda_logic(verses_prosody_data: list, db_instance, chanda_model) -> dict:
+    # ... โค้ดเดิม ไม่มีการเปลี่ยนแปลง ...
     identified_results = []
 
     for verse_index, verse_syllables_data in enumerate(verses_prosody_data):
@@ -160,11 +168,11 @@ def identify_chanda_logic(verses_prosody_data: list, db_instance, chanda_model) 
             
             if len(verse_syllables_data) > 6:
                 gana_567_string = verse_prosody_string[4:7]
-                if verse_index % 2 == 0: # บาทขอน (คี่) -> ย-คณะ (U--)
+                if verse_index % 2 == 0:
                     if gana_567_string != "U--":
                         is_pathyavatta = False
                         notes.append(f"พยางค์ ๕-๗ ไม่เป็น ย-คณะ (บังคับ U-- ได้ {gana_567_string})")
-                else: # บาทคู่ (คู่) -> ช-คณะ (U-U)
+                else:
                     if gana_567_string != "U-U":
                         is_pathyavatta = False
                         notes.append(f"พยางค์ ๕-๗ ไม่เป็น ช-คณะ (บังคับ U-U ได้ {gana_567_string})")
