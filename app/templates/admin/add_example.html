@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}เพิ่มตัวอย่างใหม่{% endblock %}
+{% block content %}
+    <h1>เพิ่มตัวอย่างฉันท์ใหม่</h1>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="title" class="form-label">หัวข้อ / ชื่อคาถา</label>
+            <input type="text" class="form-control" name="title" required>
+        </div>
+        <div class="mb-3">
+            <label for="chanda_id" class="form-label">ประเภทฉันท์</label>
+            <select class="form-select" name="chanda_id" required>
+                <option selected disabled value="">--- กรุณาเลือก ---</option>
+                {% for chanda in chandas %}
+                <option value="{{ chanda.id }}">{{ chanda.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="layout_type" class="form-label">รูปแบบการแสดงผลบาทคาถา</label>
+            <select class="form-select" name="layout_type">
+                <option value="4_lines_1_col">4 บรรทัด (บาทละบรรทัด)</option>
+                <option value="2_lines_2_cols">2 บรรทัด (บรรทัดละ 2 บาท)</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">เนื้อหาคาถา</label>
+            <div id="contentHelp" class="form-text mb-2">
+                กรุณาวางคาถาทั้งหมดที่นี่ โดยให้ <strong>แต่ละบาทขึ้นบรรทัดใหม่</strong>
+            </div>
+            <textarea class="form-control" id="content" name="content" rows="10" aria-describedby="contentHelp" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="source_type" class="form-label">ประเภทแหล่งที่มา</label>
+            <select class="form-select" name="source_type">
+                <option value="สนามหลวง">สนามหลวง</option>
+                <option value="คัมภีร์">คัมภีร์</option>
+                <option value="ทั่วไป">ทั่วไป/น่าศึกษา</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="source_details" class="form-label">รายละเอียดแหล่งที่มา</label>
+            <input type="text" class="form-control" name="source_details" placeholder="เช่น ป.ธ.๘ พ.ศ. ๒๕๖๕">
+        </div>
+        <div class="mb-3">
+            <label for="notes" class="form-label">หมายเหตุเพิ่มเติม</label>
+            <textarea class="form-control" name="notes" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="translation" class="form-label">คำแปลภาษาไทย (ถ้ามี)</label>
+            <textarea class="form-control" name="translation" rows="5"></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">บันทึกตัวอย่าง</button>
+        <a href="{{ url_for('admin.list_examples') }}" class="btn btn-secondary">ยกเลิก</a>
+    </form>
+{% endblock %}

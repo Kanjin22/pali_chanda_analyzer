@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ example.title }}{% endblock %}
+{% block styles %}{{ super() }}
+<style>
+    .verse-display { font-size: 1.1rem; line-height: 1.8; }
+    .verse-container { display: grid; gap: 0.5rem 1rem; }
+    .verse-container.layout-2-cols { grid-template-columns: 1fr 1fr; }
+    .verse-container.layout-1-col { grid-template-columns: 1fr; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center"><h2 class="card-title mb-0">{{ example.title }}</h2><a href="{{ url_for('main.examples') }}" class="btn btn-sm btn-outline-secondary">&larr; กลับไปที่คลังตัวอย่าง</a></div>
+    <div class="card-body">
+        <p class="text-muted"><strong>ประเภทฉันท์:</strong> {{ example.chanda.name }} | <strong>แหล่งที่มา:</strong> {{ example.source_details or example.source_type }}</p><hr>
+        <h4 class="mt-4">เนื้อหาคาถา</h4>
+        <div class="verse-display bg-light p-4 rounded shadow-sm">
+            {% set verses = [] %}{% if example.content %}{% for line in example.content.split('\n') %}{% if line.strip() %}{% set _ = verses.append(line.strip()) %}{% endif %}{% endfor %}{% endif %}
+            {% set container_class = 'layout-2-cols' if example.layout_type == '2_lines_2_cols' else 'layout-1-col' %}
+            <div class="verse-container {{ container_class }}">{% for verse in verses %}<div>{{ verse }}</div>{% endfor %}</div>
+        </div>
+        {% if example.notes %}<h4 class="mt-4">หมายเหตุ</h4><blockquote class="blockquote"><p>{{ example.notes }}</p></blockquote>{% endif %}
+        {% if example.translation %}<h4 class="mt-4">คำแปล</h4><div class="p-3 bg-light-subtle border rounded"><p class="mb-0" style="white-space: pre-wrap;">{{ example.translation }}</p></div>{% endif %}
+        <hr class="mt-4">
+        <div class="card bg-light border-primary"><div class="card-body"><h5 class="card-title text-primary">ศูนย์กลางการวิเคราะห์</h5><p class="card-text">เลือกชุดคาถาที่ต้องการวิเคราะห์ จากนั้นเลือกวิธีการวิเคราะห์ของคุณ</p><div class="row align-items-center g-3"><div class="col-md-5"><label for="stanza-select" class="form-label fw-bold">เลือกชุดคาถา:</label><select class="form-select form-select-lg" id="stanza-select"></select></div><div class="col-md-7"><div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4"><button id="analyze-specific-btn" class="btn btn-outline-primary btn-lg">วิเคราะห์เทียบกับ "{{ example.chanda.name }}"</button><button id="identify-chanda-btn" class="btn btn-primary btn-lg">ระบุฉันท์อัตโนมัติ</button></div></div></div><div id="selected-stanza-preview" class="mt-3"></div></div></div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded',function(){const e=`{{ example.content|e }}`,t=e.split(/\r?\n/).filter(e=>e.trim()!==""),n=Math.ceil(t.length/4),a="{{ example.chanda_id }}",l=document.getElementById("stanza-select"),c=document.getElementById("selected-stanza-preview"),o=document.getElementById("analyze-specific-btn"),d=document.getElementById("identify-chanda-btn");function s(){if(""===l.value)return void(c.innerHTML="");const e=parseInt(l.value,10),n=4*e,a=n+4,o=t.slice(n,a);c.innerHTML=o.join("\n")}function i(e){if(""!==l.value){const n=parseInt(l.value,10),o=4*n,d=o+4,i=t.slice(o,d).map(e=>encodeURIComponent(e));let r;r="analyzer.analyzer_page"===e?`{{ url_for('analyzer.analyzer_page',chanda_id=0) }}`.replace("0",a):`{{ url_for('analyzer.identify_page') }}`,r+=`?v1=${i[0]||""}&v2=${i[1]||""}&v3=${i[2]||""}&v4=${i[3]||""}`,window.open(r,"_blank")}}0===n?(l.innerHTML="<option disabled>ไม่มีข้อมูลคาถา</option>",o.disabled=!0,d.disabled=!0,c.style.display="none"):(()=>{for(let e=0;e<n;e++){const a=4*e,o=Math.min(a+4,t.length),d=document.createElement("option");d.value=e,d.textContent=`คาถาที่ ${e+1} (บาทที่ ${a+1} - ${o})`,l.appendChild(d)}})(),l.addEventListener("change",s),s(),o.addEventListener("click",function(){i("analyzer.analyzer_page")}),d.addEventListener("click",function(){i("analyzer.identify_page")})});
+</script>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}แก้ไขคำศัพท์{% endblock %}
+{% block content %}
+<h1>แก้ไขคำศัพท์: <span class="text-primary">{{ word.word }}</span></h1>
+<form method="POST">
+    <div class="mb-3">
+        <label for="word" class="form-label">คำศัพท์ (บาลี)</label>
+        <input type="text" class="form-control" name="word" value="{{ word.word }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="prosody" class="form-label">รูปแบบครุ-ลหุ</label>
+        <input type="text" class="form-control" name="prosody" value="{{ word.prosody }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="meaning" class="form-label">ความหมาย</label>
+        <textarea class="form-control" name="meaning" rows="3">{{ word.meaning or '' }}</textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+    <a href="{{ url_for('admin.list_words') }}" class="btn btn-secondary">ยกเลิก</a>
+</form>
+{% endblock %}

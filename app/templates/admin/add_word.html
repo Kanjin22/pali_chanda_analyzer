@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}เพิ่มศัพท์ใหม่{% endblock %}
+{% block content %}
+<h1>เพิ่มศัพท์ใหม่ในคลัง</h1>
+<form method="POST">
+    <div class="mb-3">
+        <label for="word" class="form-label">คำศัพท์ (บาลี)</label>
+        <input type="text" class="form-control" id="word-input" name="word" required>
+    </div>
+    <div class="mb-3">
+        <label for="prosody" class="form-label">รูปแบบครุ-ลหุ</label>
+        <div class="input-group"></div>
+        <input type="text" class="form-control" id="prosody-input" name="prosody" placeholder="เช่น U-U, --U (U = ลหุ, - = ครุ)" required>
+        <button class="btn btn-outline-secondary" type="button" id="generate-prosody-btn">Generate</button>
+    </div>
+    <div class="mb-3">
+        <label for="meaning" class="form-label">ความหมาย</label>
+        <textarea class="form-control" name="meaning" rows="3"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">บันทึกคำศัพท์</button>
+    <a href="{{ url_for('admin.list_words') }}" class="btn btn-secondary">ยกเลิก</a>
+</form>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.getElementById('generate-prosody-btn').addEventListener('click', async function() {
+    const wordInput = document.getElementById('word-input');
+    const prosodyInput = document.getElementById('prosody-input');
+    const word = wordInput.value.trim();
+        if (!word) {
+        alert('กรุณาป้อนคำศัพท์ก่อนครับ');
+        wordInput.focus();
+        return;
+    }
+    try {
+        const response = await fetch("{{ url_for('analyzer.get_prosody_api') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ word: word })
+        });
+        if (!response.ok) {
+            throw new Error('เกิดข้อผิดพลาดในการติดต่อเซิร์ฟเวอร์');
+        }
+        const data = await response.json();
+        if (data.prosody) {
+            prosodyInput.value = data.prosody;
+        } else {
+            alert('ไม่สามารถวิเคราะห์คำศัพท์ได้');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+});
+</script>
+{% endblock %}

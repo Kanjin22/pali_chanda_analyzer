@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}คลังศัพท์แต่งฉันท์{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="p-4 p-md-5 mb-4 rounded text-body-emphasis bg-body-secondary">
+        <div class="col-lg-8 px-0">
+            <h1 class="display-4 fst-italic">คลังศัพท์สำหรับแต่งฉันท์</h1>
+            <p class="lead my-3">เครื่องมือสำหรับค้นหาคำศัพท์บาลีตามรูปแบบเสียงครุ-ลหุ หรือค้นหาจากความหมาย เพื่อช่วยในการประพันธ์ฉันทลักษณ์ให้ไพเราะและถูกต้องตามฉันทลักษณ์</p>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">ค้นหาคำศัพท์</h5>
+        <form method="GET" action="{{ url_for('main.dictionary') }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="gana" class="form-label">ค้นหาจากคณะฉันท์</label>
+                    <select class="form-select" id="gana" name="gana">
+                        <option value="">-- ทุกคณะ --</option>
+                        <option value="---" {% if search_gana == '---' %}selected{% endif %}>ม-คณะ (---)</option>
+                        <option value="UUU" {% if search_gana == 'UUU' %}selected{% endif %}>น-คณะ (UUU)</option>
+                        <option value="--U" {% if search_gana == '--U' %}selected{% endif %}>ต-คณะ (--U)</option>
+                        <option value="-UU" {% if search_gana == '-UU' %}selected{% endif %}>ภ-คณะ (-UU)</option>
+                        <option value="U-U" {% if search_gana == 'U-U' %}selected{% endif %}>ช-คณะ (U-U)</option>
+                        <option value="-U-" {% if search_gana == '-U-' %}selected{% endif %}>ร-คณะ (-U-)</option>
+                        <option value="UU-" {% if search_gana == 'UU-' %}selected{% endif %}>ส-คณะ (UU-)</option>
+                        <option value="U--" {% if search_gana == 'U--' %}selected{% endif %}>ย-คณะ (U--)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="prosody" class="form-label">หรือระบุรูปแบบเอง</label>
+                    <input type="text" class="form-control" id="prosody" name="prosody" placeholder="เช่น U-, --" value="{{ search_prosody or '' }}">
+                </div>
+                <div class="col-md-5">
+                    <label for="text" class="form-label">ค้นหาจากคำ หรือ ความหมาย</label>
+                    <input type="text" class="form-control" id="text" name="text" placeholder="เช่น พุทฺธ, พระพุทธเจ้า" value="{{ search_text or '' }}">
+                </div>
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                <a href="{{ url_for('main.dictionary') }}" class="btn btn-secondary">ล้างการค้นหา</a>
+                <button type="submit" class="btn btn-primary">ค้นหา</button>
+            </div>
+        </form>
+    </div>
+    </div>
+
+    <!-- Results Table -->
+    <h3 class="mt-5 mb-3">ผลการค้นหา ({{ words|length }} รายการ)</h3>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col" style="width: 25%;">คำศัพท์ (บาลี)</th>
+                    <th scope="col" style="width: 20%;">รูปแบบครุ-ลหุ</th>
+                    <th scope="col">ความหมาย</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for word in words %}
+                <tr>
+                    <td><strong>{{ word.word }}</strong></td>
+                    <td><code class="fs-5">{{ word.prosody }}</code></td>
+                    <td>{{ word.meaning }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="text-center p-4">
+                        <p class="mb-0">ไม่พบคำศัพท์ที่ตรงกับเงื่อนไขการค้นหาของคุณ</p>
+                        <p class="text-muted small">ลองเปลี่ยนคำค้นหา หรือกด "ล้างการค้นหา" เพื่อแสดงทั้งหมด</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

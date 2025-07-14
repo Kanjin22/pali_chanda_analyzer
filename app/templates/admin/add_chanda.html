@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}เพิ่มฉันท์ใหม่{% endblock %}
+
+{% block content %}
+    <h1>เพิ่มฉันท์ใหม่</h1>
+    <form method="POST" action="{{ url_for('admin.add_chanda') }}">
+        <div class="mb-3">
+            <label for="name" class="form-label">ชื่อฉันท์</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="mb-3">
+            <label for="pattern" class="form-label">รูปแบบ (Pattern)</label>
+            <input type="text" class="form-control" id="pattern" name="pattern" placeholder="เช่น --U--U-U--U-" required>
+        </div>
+        <div class="mb-3">
+            <label for="syllable_count" class="form-label">จำนวนพยางค์</label>
+            <input type="number" class="form-control" id="syllable_count" name="syllable_count" required>
+        </div>
+        <div class="mb-3">
+            <label for="description_short" class="form-label">คำอธิบายสั้นๆ</label>
+            <textarea class="form-control" id="description_short" name="description_short" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="pariyat_url" class="form-label">ลิงก์ข้อมูลเพิ่มเติม (ถ้ามี)</label>
+            <input type="url" class="form-control" id="pariyat_url" name="pariyat_url" placeholder="https://www.pariyat.com/...">
+        </div>
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+        <a href="{{ url_for('admin.list_chandas') }}" class="btn btn-secondary">ยกเลิก</a>
+    </form>
+{% endblock %}

@@ -1,0 +1,36 @@
+<!-- app/templates/admin/edit_chanda.html -->
+
+{% extends "base.html" %}
+
+{% block title %}แก้ไขฉันท์: {{ chanda.name }}{% endblock %}
+
+{% block content %}
+    <h1>แก้ไขฉันท์: <span class="text-primary">{{ chanda.name }}</span></h1>
+    
+    <!-- เราจะส่ง form ไปที่ route เดิม แต่ใช้ method POST -->
+    <form method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">ชื่อฉันท์</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{ chanda.name }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="pattern" class="form-label">รูปแบบ (Pattern)</label>
+            <input type="text" class="form-control" id="pattern" name="pattern" value="{{ chanda.pattern }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="syllable_count" class="form-label">จำนวนพยางค์</label>
+            <input type="number" class="form-control" id="syllable_count" name="syllable_count" value="{{ chanda.syllable_count }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="description_short" class="form-label">คำอธิบายสั้นๆ</label>
+            <textarea class="form-control" id="description_short" name="description_short" rows="3">{{ chanda.description_short or '' }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="pariyat_url" class="form-label">ลิงก์ข้อมูลเพิ่มเติม (ถ้ามี)</label>
+            <input type="url" class="form-control" id="pariyat_url" name="pariyat_url" value="{{ chanda.pariyat_url or '' }}">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+        <a href="{{ url_for('admin.list_chandas') }}" class="btn btn-secondary">ยกเลิก</a>
+    </form>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}เลือกเครื่องมือวิเคราะห์{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .verse-input-group { display: flex; align-items: center; margin-bottom: 0.75rem; }
+    .verse-input-group label { width: 140px; font-weight: 500; white-space: nowrap; }
+    #analysis-container { margin-top: 2rem; overflow-x: auto; }
+    .analysis-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; text-align: center; }
+    .analysis-table th, .analysis-table td { padding: 0.5rem; border: 1px solid #dee2e6; vertical-align: middle; min-width: 50px; }
+    .analysis-table th:first-child, .analysis-table td:first-child { text-align: left; font-weight: 700; background-color: #f8f9fa; width: 180px; }
+    .analysis-table .header-row th { background-color: #e9ecef; }
+    .syllable-symbol { font-family: 'Courier New', Courier, monospace; font-size: 1.2rem; font-weight: bold; }
+    .syllable-text { font-size: 1.2rem; font-weight: 700; }
+    .required-pattern-row td { background-color: #f0f9ff; color: #5a7a94; }
+    .required-pattern-row .forbidden { color: #dc3545; font-weight: bold; text-decoration: line-through; }
+    .mismatch { background-color: #fff3cd !important; color: #664d03 !important; position: relative; outline: 2px solid #ffc107; outline-offset: -2px; }
+    .mismatch::before { content: 'ผิด!'; position: absolute; top: 1px; left: 3px; font-size: 0.65rem; color: #dc3545; font-weight: bold; }
+    .edit-mode-input, .edit-mode-select { width: 100%; border: 1px solid #0d6efd; border-radius: 4px; text-align: center; font-family: inherit; }
+    .padanta-garu-mark { font-size: 0.8em; vertical-align: super; color: #0d6efd; font-weight: normal; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="card-title">เครื่องมือวิเคราะห์ฉันทลักษณ์</h1>
+                <p class="lead text-muted">กรุณาเลือกวิธีการวิเคราะห์ที่คุณต้องการ</p>
+                <hr>
+                
+                <!-- ส่วนเลือกฉันท์ที่รู้จัก -->
+                <div class="mb-4">
+                    <h4 class="fw-normal">วิเคราะห์ตามประเภทฉันท์ที่เลือก</h4>
+                    <p>สำหรับกรณีที่คุณทราบชื่อฉันท์ที่ต้องการตรวจสอบ</p>
+                    <form id="chanda-form">
+                        <div class="input-group input-group-lg">
+                            <select class="form-select" id="chanda-select">
+                                <option selected disabled>--- กรุณาเลือกฉันท์ ---</option>
+                                {% for chanda in chandas %}
+                                    <option value="{{ chanda.id }}">{{ chanda.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-primary" type="submit">ไปที่หน้าวิเคราะห์</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- เส้นคั่น -->
+                <div class="d-flex align-items-center my-3">
+                    <hr class="flex-grow-1">
+                    <span class="mx-3 text-muted">หรือ</span>
+                    <hr class="flex-grow-1">
+                </div>
+
+                <!-- ส่วนระบุฉันท์อัตโนมัติ -->
+                <div>
+                    <h4 class="fw-normal">ระบุฉันท์อัตโนมัติ</h4>
+                    <p>สำหรับกรณีที่คุณไม่ทราบชื่อฉันท์ และต้องการให้ระบบช่วยค้นหา</p>
+                    <a href="{{ url_for('analyzer.identify_page') }}" class="btn btn-success btn-lg">ไปยังหน้าระบุฉันท์</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.getElementById('chanda-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const selectedChandaId = document.getElementById('chanda-select').value;
+        if (selectedChandaId && !isNaN(selectedChandaId)) {
+            // สร้าง URL โดยใช้ endpoint จาก analyzer blueprint
+            const url = "{{ url_for('analyzer.analyzer_page', chanda_id=0) }}".replace('0', selectedChandaId);
+            window.location.href = url;
+        } else { 
+            alert('กรุณาเลือกฉันท์ที่ต้องการตรวจสอบก่อนครับ'); 
+        }
+    });
+</script>
+{% endblock %}

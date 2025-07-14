@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}หน้าแรก - Pali Chanda Center{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    /* --- CSS สำหรับการ์ดคณะฉันท์ --- */
+    .gana-card { 
+        background-color: #fff; border: 1px solid #e0e0e0; border-radius: 10px; 
+        padding: 1.5rem; margin-bottom: 1rem; text-align: center; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+        transition: transform 0.2s, box-shadow 0.2s; 
+        height: 100%; display: flex; flex-direction: column; justify-content: space-between; 
+    }
+    .gana-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+    .gana-name { font-size: 1.5rem; font-weight: 500; color: #495057; }
+    .gana-example { font-size: 1.1rem; color: #6c757d; }
+    .gana-pattern { 
+        font-family: 'Courier New', Courier, monospace; font-size: 2rem; font-weight: bold; 
+        color: #333; margin-top: 0.5rem; border-bottom: 2px solid #eee; 
+        padding-bottom: 0.5rem; margin-bottom: 0.5rem; display: flex; 
+        justify-content: center; align-items: center; 
+        transition: font-size 0.2s; letter-spacing: 0.1em;
+    }
+    .gana-pattern span:not(:last-child)::after { 
+        content: '|'; font-weight: 100; color: #d0d0d0; 
+        margin: 0 0.75rem; transition: margin 0.2s;
+    }
+    .syllable-desc-container { display: flex; justify-content: space-around; width: 100%; }
+    .syllable-desc { font-size: 0.85rem; color: #6c757d; flex: 1; }
+
+    /* --- Media Queries for Responsive Design --- */
+    @media (max-width: 1199px) and (min-width: 992px) {
+        .gana-pattern { font-size: 1.5rem; }
+        .gana-pattern span:not(:last-child)::after { margin: 0 0.5rem; }
+    }
+    @media (max-width: 991px) {
+        .gana-pattern { font-size: 2rem; }
+        .gana-pattern span:not(:last-child)::after { margin: 0 0.75rem; }
+    }
+    @media (max-width: 575px) {
+        .gana-pattern { font-size: 1.5rem; }
+        .gana-pattern span:not(:last-child)::after { margin: 0 0.4rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header Block -->
+<div class="p-5 mb-4 bg-light rounded-3 text-center">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">ศูนย์การเรียนรู้ฉันทลักษณ์บาลี</h1>
+        <p class="fs-4">แหล่งรวมความรู้ เครื่องมือ และตัวอย่างสำหรับผู้ศึกษาฉันทลักษณ์ในภาษาบาลี</p>
+    </div>
+</div>
+
+<!-- Main Content Row -->
+<div class="row g-5">
+    <!-- คอลัมน์ซ้าย: เครื่องมือหลัก -->
+    <div class="col-lg-5 col-xl-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column justify-content-center p-4">
+                <h3 class="card-title text-center mb-4" style="font-weight: 500;">เครื่องมือหลัก</h3>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('main.dictionary') }}" class="list-group-item list-group-item-action py-3">
+                        <h5 class="mb-1">คลังศัพท์แต่งฉันท์</h5>
+                        <p class="mb-1 text-muted">ค้นหาคำศัพท์ตามรูปแบบเสียงหรือความหมาย</p>
+                    </a>
+                    <a href="{{ url_for('main.examples') }}" class="list-group-item list-group-item-action py-3">
+                        <h5 class="mb-1">คลังตัวอย่างฉันท์</h5>
+                        <p class="mb-1 text-muted">ศึกษาตัวอย่างจากข้อสอบและคัมภีร์ต่างๆ</p>
+                    </a>
+                    <a href="{{ url_for('main.analyzer_index') }}" class="list-group-item list-group-item-action py-3">
+                        <h5 class="mb-1">เครื่องมือวิเคราะห์</h5>
+                        <p class="mb-1 text-muted">วิเคราะห์และตรวจสอบความถูกต้องของคาถา</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- คอลัมน์ขวา: การ์ดคณะฉันท์ -->
+    <div class="col-lg-7 col-xl-8">
+        <h3 class="text-center mb-4" style="font-weight: 500;">ความรู้พื้นฐาน: คณะฉันท์ทั้ง ๘</h3>
+        <div class="row row-cols-2 row-cols-md-2 row-cols-lg-4 g-4">
+            <div class="col"><div class="gana-card"><div class="gana-name">ม-คณะ</div><div class="gana-example">สพฺพญฺญู</div><div class="gana-pattern"><span>–</span><span>–</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div></div></div></div>
+            <div class="col"><div class="gana-card"><div class="gana-name">น-คณะ</div><div class="gana-example">สุมุนิ</div><div class="gana-pattern"><span>U</span><span>U</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div></div></div></div>
+            <div class="col"><div class="gana-card"><div class="gana-name">ส-คณะ</div><div class="gana-example">สุคโต</div><div class="gana-pattern"><span>U</span><span>U</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div></div></div></div>
+            <div class="col"><div class="gana-card"><div class="gana-name">ภ-คณะ</div><div class="gana-example">มารชิ</div><div class="gana-pattern"><span>–</span><span>U</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">สั้น</div></div></div></div>
+            <div class="col"><div class="gana-card"><div class="gana-name">ต-คณะ</div><div class="gana-example">มาราชิ</div><div class="gana-pattern"><span>–</span><span>–</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div></div></div></div>
+            <div class="col"><div class="gana-card"><div class="gana-name">ช-คณะ</div><div class="gana-example">มุนินฺท</div><div class="gana-pattern"><span>U</span><span>–</span><span>U</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div></div></div></div>
+            <div class="col"><div class="gana-card"><div class="gana-name">ร-คณะ</div><div class="gana-example">นายโก</div><div class="gana-pattern"><span>–</span><span>U</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">ยาว</div><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div></div></div></div>
+            <div class="col"><div class="gana-card"><div class="gana-name">ย-คณะ</div><div class="gana-example">มเหสี</div><div class="gana-pattern"><span>U</span><span>–</span><span>–</span></div><div class="syllable-desc-container"><div class="syllable-desc">สั้น</div><div class="syllable-desc">ยาว</div><div class="syllable-desc">ยาว</div></div></div></div>
+        </div>
+    </div>
+</div>
+{% endblock %} <!-- +++ เพิ่ม tag ปิดที่ขาดหายไป +++ -->

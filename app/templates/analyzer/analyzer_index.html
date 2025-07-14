@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}เลือกเครื่องมือวิเคราะห์{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-5 text-center">
+                <h1 class="card-title">เครื่องมือวิเคราะห์ฉันทลักษณ์</h1>
+                <p class="lead text-muted">กรุณาเลือกวิธีการวิเคราะห์ที่คุณต้องการ</p>
+                <hr class="my-4">
+                
+                <!-- ส่วนที่ 1: วิเคราะห์ตามประเภทฉันท์ที่เลือก -->
+                <div class="mb-5">
+                    <h4 class="fw-normal">วิเคราะห์ตามประเภทฉันท์</h4>
+                    <p>สำหรับกรณีที่คุณทราบชื่อฉันท์ที่ต้องการตรวจสอบ</p>
+                    <form id="chanda-select-form">
+                        <div class="input-group input-group-lg">
+                            <select class="form-select" id="chanda-select">
+                                <option selected disabled>--- กรุณาเลือกฉันท์ ---</option>
+                                {% for chanda in chandas %}
+                                    <!-- +++ แก้ไขบรรทัดนี้ +++ -->
+                                    <option value="{{ chanda.id }}">{{ chanda.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-primary" type="submit">ไปที่หน้าวิเคราะห์</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- เส้นคั่น -->
+                <div class="d-flex align-items-center my-4">
+                    <hr class="flex-grow-1">
+                    <span class="mx-3 text-muted h5">หรือ</span>
+                    <hr class="flex-grow-1">
+                </div>
+
+                <!-- ส่วนที่ 2: ระบุฉันท์อัตโนมัติ -->
+                <div>
+                    <h4 class="fw-normal">ระบุฉันท์อัตโนมัติ</h4>
+                    <p>สำหรับกรณีที่คุณไม่ทราบชื่อฉันท์ และต้องการให้ระบบช่วยค้นหา</p>
+                    <a href="{{ url_for('analyzer.identify_page') }}" class="btn btn-success btn-lg">ไปยังหน้าระบุฉันท์</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.getElementById('chanda-select-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const selectedChandaId = document.getElementById('chanda-select').value;
+    
+    if (selectedChandaId && !isNaN(selectedChandaId)) {
+        const url = "{{ url_for('analyzer.analyzer_page', chanda_id=0) }}".replace('0', selectedChandaId);
+        window.location.href = url;
+    } else { 
+        alert('กรุณาเลือกฉันท์ที่ต้องการตรวจสอบก่อนครับ'); 
+    }
+});
+</script>
+{% endblock %}
