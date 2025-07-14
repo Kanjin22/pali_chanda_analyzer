@@ -1,0 +1,25 @@
+<!-- app/templates/main/chanda_list.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <h2 class="h4 text-center mb-4">{{ title }}</h2>
+        
+        <ul class="list-group">
+            {% for chanda in chandas %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('analyzer.analyzer_page', chanda_id=chanda.id) }}">
+                    {{ chanda.name }} ({{ chanda.syllable_count }} พยางค์)
+                </a>
+                <span class="badge bg-primary rounded-pill">ID: {{ chanda.id }}</span>
+            </li>
+            {% else %}
+            <li class="list-group-item text-center text-muted">ไม่พบฉันท์ในระบบ</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

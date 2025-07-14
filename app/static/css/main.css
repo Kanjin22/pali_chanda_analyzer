@@ -1,0 +1,25 @@
+/* D:\pali_chanda_center\app\static\css\main.css */
+body {
+    font-family: 'Noto Sans Thai', sans-serif; /* ตัวอย่างการใช้ฟอนต์ไทย */
+    background-color: #f4f7f6;
+    color: #333;
+}
+
+.card {
+    border-radius: 8px;
+    border: none;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}

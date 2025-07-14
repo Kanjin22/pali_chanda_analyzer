@@ -1,6 +1,6 @@
 # app/main/routes.py
 from flask import Blueprint, render_template, redirect, url_for, request
-from ..models import Chanda, VerseExample, PoeticWord
+from ..models import Chanda, VerseExample, PoeticWord 
 
 main = Blueprint('main', __name__)
 
@@ -14,8 +14,18 @@ def index():
 # --- Route to: app/templates/analyzer/analyzer_index.html ---
 @main.route('/analyzer')
 def analyzer_index():
-    chandas = Chanda.query.order_by(Chanda.name).all()
+    # เรียงตาม ID เพื่อให้เป็นลำดับการเพิ่ม
+    chandas = Chanda.query.order_by(Chanda.id).all() 
     return render_template('analyzer/analyzer_index.html', chandas=chandas)
+
+
+# --- Route to: app/templates/main/chanda_list.html ---
+# ใช้สำหรับแสดงรายการฉันท์ทั้งหมด
+@main.route('/chanda_list')
+def chanda_list():
+    # ในหน้านี้อาจจะอยากเรียงตามชื่อ
+    chandas = Chanda.query.order_by(Chanda.name).all()
+    return render_template('main/chanda_list.html', title='รวมฉันท์', chandas=chandas)
 
 
 # --- Route to: app/templates/main/dictionary.html ---

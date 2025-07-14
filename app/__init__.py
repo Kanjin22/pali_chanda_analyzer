@@ -20,25 +20,29 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message = "กรุณาล็อกอินเพื่อเข้าถึงหน้านี้"
 
-    with app.app_context():
-        from . import models
+    # Import models here, outside of app_context, for blueprint and user_loader access
+    from . import models
 
-        # --- User Loader ---
-        @login_manager.user_loader
-        def load_user(user_id):
-            return models.User.query.get(int(user_id))
+    # --- User Loader ---
+    @login_manager.user_loader
+    def load_user(user_id):
+        return models.User.query.get(int(user_id))
 
-        # --- Register Blueprints ---
-        from .main.routes import main as main_blueprint
-        app.register_blueprint(main_blueprint)
+    # --- Register Blueprints ---
+    from .main.routes import main as main_blueprint
+    app.register_blueprint(main_blueprint)
 
-        from .auth.routes import auth as auth_blueprint
-        app.register_blueprint(auth_blueprint)
-        
-        from .admin.routes import admin as admin_blueprint
-        app.register_blueprint(admin_blueprint, url_prefix='/admin')
-        
-        from .analyzer.routes import analyzer as analyzer_blueprint
-        app.register_blueprint(analyzer_blueprint, url_prefix='/analyzer')
+    from .auth.routes import auth as auth_blueprint
+    app.register_blueprint(auth_blueprint)
+    
+    from .admin.routes import admin as admin_blueprint
+    app.register_blueprint(admin_blueprint, url_prefix='/admin')
+    
+    from .analyzer.routes import analyzer as analyzer_blueprint
+    app.register_blueprint(analyzer_blueprint, url_prefix='/analyzer')
+
+    # --- Register CLI commands ---
+    from . import cli
+    cli.register_commands(app)
 
     return app

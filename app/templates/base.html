@@ -4,66 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Pali Chanda Center{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f8f9fa; }
-    </style>
-    {% block styles %}{% endblock %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
+    <header class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-4">
+        <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">Pali Chanda Center</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dictionary') }}">คลังศัพท์</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.examples') }}">คลังตัวอย่าง</a></li>
-                </ul>
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.index') }}">หน้าแรก</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.chanda_list') }}">รวมฉันท์</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.analyzer_index') }}">เครื่องมือวิเคราะห์</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.dictionary') }}">พจนานุกรม</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.examples') }}">ตัวอย่างคาถา</a></li>
+
+                    {# --- START OF CONDITIONAL ADMIN / AUTH LINKS --- #}
                     {% if current_user.is_authenticated %}
+                        {# ตรวจสอบว่าเป็นผู้ดูแลระบบหรือไม่ #}
+                        {% if current_user.is_administrator() %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                สวัสดี, {{ current_user.username }}
+                            <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                ผู้ดูแล
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <!-- +++ แก้ไขลิงก์ตรงนี้ +++ -->
-                                <li><a class="dropdown-item" href="{{ url_for('admin.list_chandas') }}">จัดการฉันท์</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.list_words') }}">จัดการคลังศัพท์</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('admin.list_examples') }}">จัดการคลังตัวอย่าง</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">ออกจากระบบ</a></li>
+                            <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                {# *** เปลี่ยนลิงก์ Admin ทั้งหมดเป็นแบบ Hardcode เพื่อเลี่ยง BuildError *** #}
+                                <li><a class="dropdown-item" href="{{ '/admin/' if current_user.is_authenticated and current_user.is_administrator() else '#' }}">หน้าแรกผู้ดูแล</a></li>
+                                <li><a class="dropdown-item" href="{{ '/admin/chandas' if current_user.is_authenticated and current_user.is_administrator() else '#' }}">จัดการฉันท์</a></li>
+                                <li><a class="dropdown-item" href="{{ '/admin/examples' if current_user.is_authenticated and current_user.is_administrator() else '#' }}">จัดการตัวอย่าง</a></li>
+                                <li><a class="dropdown-item" href="{{ '/admin/words' if current_user.is_authenticated and current_user.is_administrator() else '#' }}">จัดการคำศัพท์</a></li>
+                                <li><a class="dropdown-item" href="{{ '/admin/users' if current_user.is_authenticated and current_user.is_administrator() else '#' }}">จัดการผู้ใช้</a></li>
+                                {# *** สิ้นสุดการเปลี่ยนลิงก์ Hardcode *** #}
                             </ul>
                         </li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">ออกจากระบบ</a></li>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('auth.login') }}">สำหรับผู้ดูแลระบบ</a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">เข้าสู่ระบบ</a></li>
                     {% endif %}
+                    {# --- END OF CONDITIONAL ADMIN / AUTH LINKS --- #}
                 </ul>
             </div>
         </div>
-    </nav>
-    <main class="container mt-4">
+    </header>
+
+    <main class="container my-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
-    <footer class="text-center text-muted p-4 mt-5">
-        <p>&copy; ๒๕๖๗ - Pali Chanda Center</p>
+
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">© 2023 Pali Chanda Center. All rights reserved.</span>
+        </div>
     </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

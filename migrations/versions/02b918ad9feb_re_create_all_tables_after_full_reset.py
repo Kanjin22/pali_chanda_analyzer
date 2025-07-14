@@ -1,8 +1,8 @@
-"""Initial migration for Pali Chanda Center
+"""Re-create all tables after full reset
 
-Revision ID: 0d4c0b33fd30
+Revision ID: 02b918ad9feb
 Revises: 
-Create Date: 2025-07-12 17:29:28.559876
+Create Date: 2025-07-14 23:09:00.190583
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '0d4c0b33fd30'
+revision = '02b918ad9feb'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,9 +21,11 @@ def upgrade():
     op.create_table('chanda',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=100), nullable=False),
-    sa.Column('pattern', sa.String(length=200), nullable=False),
+    sa.Column('pattern', sa.String(length=200), nullable=True),
     sa.Column('syllable_count', sa.Integer(), nullable=False),
     sa.Column('description_short', sa.Text(), nullable=True),
+    sa.Column('pariyat_url', sa.String(length=500), nullable=True),
+    sa.Column('is_mixed_chanda', sa.Boolean(), server_default=sa.text('0'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name')
     )
@@ -42,21 +44,30 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(length=64), nullable=False),
     sa.Column('password_hash', sa.String(length=256), nullable=False),
+    sa.Column('is_admin', sa.Boolean(), server_default=sa.text('0'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_user_username'), ['username'], unique=True)
 
+    op.create_table('upajati_sub_type',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=50), nullable=False),
+    sa.Column('sequence_pattern', sa.String(length=4), nullable=False),
+    sa.Column('chanda_id', sa.Integer(), nullable=False),
+    sa.ForeignKeyConstraint(['chanda_id'], ['chanda.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('sequence_pattern')
+    )
     op.create_table('verse_example',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=200), nullable=False),
-    sa.Column('verse_line1', sa.String(length=500), nullable=True),
-    sa.Column('verse_line2', sa.String(length=500), nullable=True),
-    sa.Column('verse_line3', sa.String(length=500), nullable=True),
-    sa.Column('verse_line4', sa.String(length=500), nullable=True),
+    sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('layout_type', sa.String(length=20), nullable=False),
     sa.Column('source_type', sa.String(length=50), nullable=True),
     sa.Column('source_details', sa.String(length=200), nullable=True),
     sa.Column('notes', sa.Text(), nullable=True),
+    sa.Column('translation', sa.Text(), nullable=True),
     sa.Column('chanda_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['chanda_id'], ['chanda.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -73,6 +84,7 @@ def downgrade():
         batch_op.drop_index(batch_op.f('ix_verse_example_source_type'))
 
     op.drop_table('verse_example')
+    op.drop_table('upajati_sub_type')
     with op.batch_alter_table('user', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_user_username'))
 

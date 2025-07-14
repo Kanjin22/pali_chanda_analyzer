@@ -1,0 +1,53 @@
+<!-- app/templates/admin/list_users.html -->
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 text-center mb-0">{{ title }}</h2>
+            {# *** เปิดใช้งานปุ่ม "เพิ่มผู้ใช้ใหม่" *** #}
+            <a href="/admin/users/add" class="btn btn-success">เพิ่มผู้ใช้ใหม่</a> {# URL Hardcode #}
+        </div>
+        
+        <table class="table table-hover table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>ชื่อผู้ใช้</th>
+                    <th>สิทธิ์ผู้ดูแล</th>
+                    <th>การจัดการ</th> {# *** เปิดใช้งาน Header "การจัดการ" *** #}
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>
+                        {% if user.is_admin %}
+                            <span class="badge bg-success">ใช่</span>
+                        {% else %}
+                            <span class="badge bg-secondary">ไม่ใช่</span>
+                        {% endif %}
+                    </td>
+                    {# *** เปิดใช้งานคอลัมน์ "การจัดการ" (ปุ่มแก้ไข/ลบ) *** #}
+                    <td>
+                        <a href="/admin/users/edit/{{ user.id }}" class="btn btn-sm btn-info">แก้ไข</a> {# URL Hardcode #}
+                        <form action="/admin/users/delete/{{ user.id }}" method="POST" style="display:inline;"> {# URL Hardcode #}
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('คุณแน่ใจหรือไม่ที่จะลบผู้ใช้นี้?');">ลบ</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">ไม่พบผู้ใช้ในระบบ</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

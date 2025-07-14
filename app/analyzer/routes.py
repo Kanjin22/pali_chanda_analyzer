@@ -1,7 +1,7 @@
 # app/analyzer/routes.py
-from flask import Blueprint, render_template, request, jsonify, url_for
-from . import logic
+from flask import Blueprint, render_template, request, jsonify
 from ..models import Chanda
+from ..analyzer import logic 
 
 analyzer = Blueprint('analyzer', __name__)
 
@@ -10,45 +10,81 @@ def analyzer_page(chanda_id):
     chanda_info = Chanda.query.get_or_404(chanda_id)
     return render_template('analyzer/analyzer_page.html', chanda=chanda_info)
 
-@analyzer.route('/identify')
+@analyzer.route('/identify') # URL: /analyzer/identify
 def identify_page():
-    return render_template('analyzer/identify_page.html')
+    return render_template('analyzer/identify_page.html', title="ระบุฉันท์อัตโนมัติ")
 
-
+# --- API Endpoint สำหรับการแบ่งพยางค์และวิเคราะห์ ---
 @analyzer.route('/api/analyze', methods=['POST'])
 def analyze_api():
     data = request.get_json()
-    if not data or 'verses' not in data:
-        return jsonify({'error': 'Invalid input'}), 400
-    results_by_verse = []
-    if all(isinstance(v, str) for v in data['verses']):
-        for verse_text in data['verses']:
-            results_by_verse.append(logic.syllabify_and_analyze(verse_text))
-    elif all(isinstance(v, list) for v in data['verses']):
-        for verse_syllables_list in data['verses']:
-            results_by_verse.append(logic.analyze_prosody(verse_syllables_list))
-    return jsonify(results_by_verse)
+    input_verses = data.get('verses', []) 
+    
+    is_initial_text_input = False
+    if input_verses and isinstance(input_verses[0], str):
+        is_initial_text_input = True
+    
+    prosody_results_for_frontend = [] 
+    
+    if is_initial_text_input:
+        # กรณี 1: การแบ่งพยางค์ครั้งแรกจากข้อความดิบที่ผู้ใช้ป้อนเข้ามา
+        for verse_text in input_verses:
+            if verse_text.strip():
+                # logic.syllabify_and_analyze จะทำทั้ง Clean, Syllabify, และ Analyze Prosody
+                analyzed_syllables = logic.syllabify_and_analyze(verse_text) 
+                prosody_results_for_frontend.append({
+                    "syllables_data": analyzed_syllables,
+                    "notes": "แบ่งพยางค์เริ่มต้น",
+                    "determined_pattern": None, 
+                    "matches": [] 
+                })
+            else:
+                prosody_results_for_frontend.append({
+                    "syllables_data": [],
+                    "notes": "ไม่มีข้อความสำหรับบาทนี้",
+                    "determined_pattern": None,
+                    "matches": []
+                })
+        
+        return jsonify({
+            "results_by_verse": prosody_results_for_frontend,
+            "syllable_patterns": {} 
+        })
+    else:
+        # กรณี 2: การวิเคราะห์ครั้งสุดท้ายจากพยางค์ที่แก้ไขแล้ว
+        # input_verses ตอนนี้คือ list ของ list ของ raw syllable strings
+        
+        analyzed_input_syllables_per_verse = []
+        for raw_syllable_list in input_verses:
+            if raw_syllable_list:
+                # สำหรับพยางค์ที่แก้ไขแล้ว (string) ต้องวิเคราะห์ prosody ใหม่
+                analyzed_input_syllables_per_verse.append(logic.analyze_prosody(raw_syllable_list))
+            else:
+                analyzed_input_syllables_per_verse.append([])
+        
+        identification_results = logic.identify_chanda_logic(analyzed_input_syllables_per_verse)
+        
+        return jsonify(identification_results)
 
-
-@analyzer.route('/api/identify_chanda', methods=['POST'])
+# --- API Endpoint สำหรับการระบุฉันท์ (จากพยางค์ที่แก้ไขแล้ว) ---
+@analyzer.route('/api/identify', methods=['POST'])
 def identify_chanda_api():
     data = request.get_json()
-    if not data or 'verses' not in data:
-        return jsonify({'error': 'Invalid input'}), 400
-    prosody_results_by_verse = [logic.analyze_prosody(verse_syllables_list) for verse_syllables_list in data['verses']]
-    identification_results = logic.identify_chanda_logic(prosody_results_by_verse)
+    corrected_syllables_by_verse = data.get('verses', [])
+
+    analyzed_input_syllables_per_verse = []
+    for raw_syllable_list in corrected_syllables_by_verse:
+        if raw_syllable_list:
+            analyzed_input_syllables_per_verse.append(logic.analyze_prosody(raw_syllable_list))
+        else:
+            analyzed_input_syllables_per_verse.append([])
+    
+    identification_results = logic.identify_chanda_logic(analyzed_input_syllables_per_verse)
+    
     return jsonify({
-        "identification": identification_results,
-        "prosody_results": prosody_results_by_verse
+        "prosody_results": identification_results["results_by_verse"], 
+        "identification": {
+            "results_by_verse": identification_results["results_by_verse"], 
+            "syllable_patterns": identification_results["syllable_patterns"] 
+        }
     })
-
-
-@analyzer.route('/api/get_prosody', methods=['POST'])
-def get_prosody_api():
-    data = request.get_json()
-    word = data.get('word', '')
-    if not word:
-        return jsonify({'error': 'No word provided'}), 400
-    syllables_data = logic.syllabify_and_analyze(word)
-    prosody_pattern = "".join([syl['type'].replace('lahu', 'U').replace('garu', '-') for syl in syllables_data])
-    return jsonify({'prosody': prosody_pattern})

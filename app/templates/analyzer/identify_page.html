@@ -95,8 +95,9 @@
             const response = await fetch("{{ url_for('analyzer.analyze_api') }}", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ verses: verseInputs }) });
             if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
             const data = await response.json();
-            const maxSyllableLength = data.reduce((max, verse) => Math.max(max, verse.length), 0);
-            displayEditableSyllablesTable(data, maxSyllableLength > 0 ? maxSyllableLength : 11);
+            
+            const maxSyllableLength = data.results_by_verse.reduce((max, verseResult) => Math.max(max, verseResult.syllables_data ? verseResult.syllables_data.length : 0), 0);
+            displayEditableSyllablesTable(data.results_by_verse, maxSyllableLength > 0 ? maxSyllableLength : 11);
             analyzeBtn.classList.add('d-none');
             actionsContainer.classList.remove('d-none');
         } catch (error) { showError(error); }
@@ -110,7 +111,7 @@
             if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
             const data = await response.json();
             
-            const maxSyllableLength = data.prosody_results.reduce((max, verse) => Math.max(max, verse.length), 0);
+            const maxSyllableLength = data.prosody_results.reduce((max, verseResult) => Math.max(max, verseResult.syllables_data ? verseResult.syllables_data.length : 0), 0);
             displayFinalTable(data.prosody_results, maxSyllableLength > 0 ? maxSyllableLength : 11);
             displayIdentificationResults(data.identification.results_by_verse, data.identification.syllable_patterns);
 
@@ -119,53 +120,59 @@
         } catch (error) { showError(error); }
     });
 
-    function displayEditableSyllablesTable(versesData, fixedSyllableCount) {
+    function displayEditableSyllablesTable(versesResultsData, fixedSyllableCount) { 
         let headerHTML = `<tr><th>รายละเอียด</th>`;
         for(let i = 1; i <= fixedSyllableCount; i++) { headerHTML += `<th>${toThaiNumeral(i)}</th>`; }
         headerHTML += '</tr>';
         let tableBodyHTML = '';
-        versesData.forEach((verseSyllables, index) => {
-            if (verseSyllables.length === 0) return;
-            let resultRow = `<tr><td>ผลการวิเคราะห์</td>`;
-            let syllableRow = `<tr class="table-group-divider" data-verse-index="${index}"><td class="fw-bold">บาทที่ ${toThaiNumeral(index + 1)}</td>`;
-            for (let i = 0; i < fixedSyllableCount; i++) {
-                const syl = verseSyllables[i];
-                if(syl) {
-                    syllableRow += `<td><input type="text" class="edit-mode-input" value="${syl.syllable}"></td>`;
-                    resultRow += `<td class="syllable-symbol">${syl.type === 'lahu' ? 'U' : '–'}</td>`;
-                } else {
-                    syllableRow += `<td><input type="text" class="edit-mode-input" value="-"></td>`;
-                    resultRow += `<td>-</td>`;
+        if (versesResultsData && Array.isArray(versesResultsData)) {
+            versesResultsData.forEach((verseResult, index) => { 
+                const verseSyllables = verseResult.syllables_data;
+                if (!verseSyllables || verseSyllables.length === 0) return; 
+                let resultRow = `<tr><td>ผลการวิเคราะห์</td>`;
+                let syllableRow = `<tr class="table-group-divider" data-verse-index="${index}"><td class="fw-bold">บาทที่ ${toThaiNumeral(index + 1)}</td>`;
+                for (let i = 0; i < fixedSyllableCount; i++) { 
+                    const syl = verseSyllables[i];
+                    if(syl) {
+                        syllableRow += `<td><input type="text" class="edit-mode-input" value="${syl.syllable}"></td>`;
+                        resultRow += `<td class="syllable-symbol">${syl.type === 'lahu' ? 'U' : '–'}</td>`;
+                    } else {
+                        syllableRow += `<td><input type="text" class="edit-mode-input" value="-"></td>`;
+                        resultRow += `<td>-</td>`;
+                    }
                 }
-            }
-            syllableRow += '</tr>'; resultRow += '</tr>';
-            tableBodyHTML += syllableRow + resultRow;
-        });
+                syllableRow += '</tr>'; resultRow += '</tr>';
+                tableBodyHTML += syllableRow + resultRow;
+            });
+        }
         analysisContainer.innerHTML = `<table class="analysis-table mt-4"><thead class="header-row">${headerHTML}</thead><tbody>${tableBodyHTML}</tbody></table>`;
     }
 
-    function displayFinalTable(versesData, syllableCount) {
+    function displayFinalTable(versesResultsData, fixedSyllableCount) { 
         let headerHTML = `<tr><th>รายละเอียด</th>`;
-        for(let i = 1; i <= syllableCount; i++) { headerHTML += `<th>${toThaiNumeral(i)}</th>`; }
+        for(let i = 1; i <= fixedSyllableCount; i++) { headerHTML += `<th>${toThaiNumeral(i)}</th>`; }
         headerHTML += '</tr>';
         let tableBodyHTML = '';
-        versesData.forEach((verseSyllables, index) => {
-            if (verseSyllables.length === 0) return;
-            let resultRow = `<tr><td>ผลการวิเคราะห์</td>`;
-            let syllableRow = `<tr class="table-group-divider"><td class="fw-bold">บาทที่ ${toThaiNumeral(index + 1)}</td>`;
-            for (let i = 0; i < syllableCount; i++) {
-                const syl = verseSyllables[i];
-                if(syl) {
-                    resultRow += `<td class="syllable-symbol">${syl.type === 'lahu' ? 'U' : '–'}</td>`;
-                    syllableRow += `<td class="syllable-text">${syl.syllable}</td>`;
-                } else {
-                    resultRow += `<td>-</td>`;
-                    syllableRow += `<td>-</td>`;
+        if (versesResultsData && Array.isArray(versesResultsData)) {
+            versesResultsData.forEach((verseResult, index) => { 
+                const verseSyllables = verseResult.syllables_data;
+                if (!verseSyllables || verseSyllables.length === 0) return; 
+                let resultRow = `<tr><td>ผลการวิเคราะห์</td>`;
+                let syllableRow = `<tr class="table-group-divider"><td class="fw-bold">บาทที่ ${toThaiNumeral(index + 1)}</td>`;
+                for (let i = 0; i < fixedSyllableCount; i++) { 
+                    const syl = verseSyllables[i];
+                    if(syl) {
+                        resultRow += `<td class="syllable-symbol">${syl.type === 'lahu' ? 'U' : '–'}</td>`;
+                        syllableRow += `<td class="syllable-text">${syl.syllable}</td>`;
+                    } else {
+                        resultRow += `<td>-</td>`;
+                        syllableRow += `<td>-</td>`;
+                    }
                 }
-            }
-            resultRow += '</tr>'; syllableRow += '</tr>';
-            tableBodyHTML += syllableRow + resultRow;
-        });
+                resultRow += '</tr>'; syllableRow += '</tr>';
+                tableBodyHTML += syllableRow + resultRow;
+            });
+        }
         analysisContainer.innerHTML = `<table class="analysis-table mt-4"><thead class="header-row">${headerHTML}</thead><tbody>${tableBodyHTML}</tbody></table>`;
     }
 
@@ -180,7 +187,18 @@
                 if (res.matches && res.matches.length > 0) {
                     html += `<ul>`;
                     res.matches.forEach(match => {
-                        const patternDetails = patterns[match.id] ? ` (${patterns[match.id].pattern.replace(/-/g, '–')})` : '';
+                        let patternDisplay = '';
+                        if (match.pattern) {
+                            patternDisplay = match.pattern;
+                            if (patternDisplay.includes('U') || patternDisplay.includes('-')) {
+                                patternDisplay = patternDisplay.replace(/-/g, '–');
+                            }
+                        } else if (patterns[match.id] && patterns[match.id].pattern) {
+                            patternDisplay = patterns[match.id].pattern.replace(/-/g, '–');
+                        }
+                        
+                        const patternDetails = patternDisplay ? ` (${patternDisplay})` : '';
+
                         html += `<li><strong>${match.name}</strong>${patternDetails} - <span class="text-success">${match.match_type}</span></li>`;
                         if(match.notes) { html += `<small class="d-block text-muted ms-3"><em>หมายเหตุ: ${match.notes}</em></small>`; }
                     });
