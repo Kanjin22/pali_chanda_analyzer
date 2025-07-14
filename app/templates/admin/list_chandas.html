@@ -1,7 +1,6 @@
 <!-- app/templates/admin/list_chandas.html -->
 
 {% extends "base.html" %}
-
 {% block title %}จัดการฉันท์{% endblock %}
 
 {% block content %}
@@ -13,31 +12,32 @@
     <table class="table table-striped table-hover">
         <thead class="table-dark">
             <tr>
-                <th>ชื่อฉันท์</th>
-                <th>จำนวนพยางค์</th>
-                <th>รูปแบบ (Pattern)</th>
-                <th>Actions</th>
+                <!-- +++ เพิ่มคอลัมน์ "ลำดับ" +++ -->
+                <th scope="col" style="width: 5%;">#</th> 
+                <th scope="col">ชื่อฉันท์</th>
+                <th scope="col">จำนวนพยางค์</th>
+                <th scope="col">รูปแบบ (Pattern)</th>
+                <th scope="col">Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for chanda in chandas %}
             <tr>
+                <!-- +++ แสดงลำดับโดยใช้ loop.index +++ -->
+                <td>{{ loop.index }}</td>
                 <td>{{ chanda.name }}</td>
                 <td>{{ chanda.syllable_count }}</td>
                 <td><code>{{ chanda.pattern }}</code></td>
                 <td>
-                    <!-- +++ แก้ไขลิงก์ "แก้ไข" +++ -->
                     <a href="{{ url_for('admin.edit_chanda', chanda_id=chanda.id) }}" class="btn btn-sm btn-secondary">แก้ไข</a>
-                    
-                    <!-- +++ เพิ่มฟอร์มสำหรับ "ลบ" +++ -->
-                    <form method="POST" action="{{ url_for('admin.delete_chanda', chanda_id=chanda.id) }}" style="display:inline;" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบฉันท์นี้? การกระทำนี้ไม่สามารถย้อนกลับได้');">
+                    <form method="POST" action="{{ url_for('admin.delete_chanda', chanda_id=chanda.id) }}" style="display:inline;" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบฉันท์นี้?');">
                         <button type="submit" class="btn btn-sm btn-danger">ลบ</button>
                     </form>
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="4" class="text-center">ยังไม่มีข้อมูลฉันท์ในระบบ</td>
+                <td colspan="5" class="text-center">ยังไม่มีข้อมูลฉันท์ในระบบ</td> <!-- แก้เป็น 5 columns -->
             </tr>
             {% endfor %}
         </tbody>

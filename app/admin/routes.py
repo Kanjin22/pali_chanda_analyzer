@@ -17,7 +17,7 @@ def dashboard():
 @admin.route('/chandas')
 @login_required
 def list_chandas():
-    chandas = Chanda.query.order_by(Chanda.name).all()
+    chandas = Chanda.query.order_by(Chanda.syllable_count, Chanda.name).all()
     return render_template('admin/list_chandas.html', chandas=chandas)
 
 @admin.route('/chandas/add', methods=['GET', 'POST'])
